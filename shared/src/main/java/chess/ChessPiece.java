@@ -59,6 +59,7 @@ public class ChessPiece {
         return this.pieceType;
     }
 
+    //Finds moves for Queen, Rook and Bishop
     public Collection<ChessMove> findDistanceMoves(ChessBoard board, ChessPosition myPosition, int[][] directions) {
         Collection<ChessMove> validMoves = new ArrayList<>();
         for (int[] direction : directions) {
@@ -77,18 +78,21 @@ public class ChessPiece {
                 } else {
                     if (occupyingPiece.getTeamColor() != this.teamColor) {
                         validMoves.add(new ChessMove(myPosition, newPosition, null));
-                    } break; //Own piece in the way
+                    } break; //Same-color piece is in the way
                 }
             }
         } return validMoves;
     }
 
+    //Finds moves for King and Knight
     public Collection<ChessMove> findOtherMoves(ChessBoard board, ChessPosition myPosition, ChessPosition[] positions) {
         Collection<ChessMove> validMoves = new ArrayList<>();
         for (ChessPosition position : positions) {
-            if (position.getRow() >= 1 && position.getRow() <= 8 && position.getColumn() >= 1 && position.getColumn() <= 8) {
+            if (position.getRow() >= 1 && position.getRow() <= 8 && position.getColumn() >= 1 && position.getColumn() <= 8) { //In-bounds
                 ChessPiece occupyingPiece = board.getPiece(position);
-                if (occupyingPiece != null && occupyingPiece.getTeamColor() != this.teamColor) {
+                if (occupyingPiece == null) { //No piece at target square
+                    validMoves.add(new ChessMove(myPosition, position, null));
+                } else if (occupyingPiece.getTeamColor() != this.teamColor) { //Capture opponent's piece on target square
                     validMoves.add(new ChessMove(myPosition, position, null));
                 }
             }
@@ -192,19 +196,19 @@ public class ChessPiece {
                                 }
                             }
                         }
-                    } else { // ! Pawn is promoting
+                    } else { // ~ Pawn is promoting
                         pawnPromote(board, myPosition, pawnMoves, BlackPawnOneSquare, BlackPawnTakeLeft, BlackPawnTakeRight);
                     }
-                } else { //White pawns - move up board
+                } else { // ! White pawns - move up board
                     ChessPosition WhitePawnOneSquare = new ChessPosition(myRow + 1, myCol); //Standard move
                     ChessPosition WhitePawnTakeLeft = new ChessPosition(myRow + 1, myCol - 1); //Diagonal capture
                     ChessPosition WhitePawnTakeRight = new ChessPosition(myRow + 1, myCol + 1); //Diagonal capture
-                    if (myRow != 7) { //Pawn is not promoting
-                        if (board.getPiece(WhitePawnOneSquare) == null) { //One square
+                    if (myRow != 7) { // * Pawn is not promoting
+                        if (board.getPiece(WhitePawnOneSquare) == null) { // * One square
                             pawnMoves.add(new ChessMove(myPosition, WhitePawnOneSquare, null));
-                            if (myRow == 2) { //First pawn move
-                                ChessPosition WhitePawnTwoSquares = new ChessPosition(myRow + 2, myCol); //Two-square move
-                                if (board.getPiece(WhitePawnTwoSquares) == null) { //Move is available
+                            if (myRow == 2) { // * First pawn move
+                                ChessPosition WhitePawnTwoSquares = new ChessPosition(myRow + 2, myCol); // * Two-square move
+                                if (board.getPiece(WhitePawnTwoSquares) == null) { // * Move is available
                                     pawnMoves.add(new ChessMove(myPosition, WhitePawnTwoSquares, null));
                                 }
                             }
@@ -221,13 +225,12 @@ public class ChessPiece {
                                 }
                             }
                         }
-                    } else { //Pawn is promoting
+                    } else { // ~ Pawn is promoting
                         pawnPromote(board, myPosition, pawnMoves, WhitePawnOneSquare, WhitePawnTakeLeft, WhitePawnTakeRight);
                     }
                 } validMoves = pawnMoves;
         } return validMoves;
     }
-
     //Find possible pawn promotion moves
     public void pawnPromote(ChessBoard board, ChessPosition myPosition, Collection<ChessMove> pawnMoves, ChessPosition PawnOneSquare, ChessPosition PawnTakeLeft, ChessPosition PawnTakeRight) {
         pawnMoves.add(new ChessMove(myPosition, PawnOneSquare, PieceType.QUEEN));
