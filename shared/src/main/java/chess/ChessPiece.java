@@ -73,7 +73,7 @@ public class ChessPiece {
                 }
                 ChessPosition newPosition = new ChessPosition(row, col);
                 ChessPiece occupyingPiece = board.getPiece(newPosition);
-                if (occupyingPiece == null) {
+                if (occupyingPiece == null) { //Empty square, go ahead
                     validMoves.add(new ChessMove(myPosition, newPosition, null));
                 } else {
                     if (occupyingPiece.getTeamColor() != this.teamColor) {
@@ -109,9 +109,8 @@ public class ChessPiece {
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
         int myRow = myPosition.getRow();
         int myCol = myPosition.getColumn();
-        Collection<ChessMove> validMoves = new ArrayList<>();
-        switch (this.pieceType) {
-            case KING:
+        return switch (this.pieceType) {
+            case KING -> {
                 ChessPosition[] kingPositions = {
                         new ChessPosition(myRow + 1, myCol + 1), //Up and right
                         new ChessPosition(myRow + 1, myCol), //Up
@@ -122,9 +121,9 @@ public class ChessPiece {
                         new ChessPosition(myRow - 1, myCol), //Down
                         new ChessPosition(myRow - 1, myCol - 1) //Down and left
                 };
-                validMoves = findOtherMoves(board, myPosition, kingPositions);
-                break;
-            case QUEEN:
+                yield findOtherMoves(board, myPosition, kingPositions);
+            }
+            case QUEEN -> {
                 int[][] queenDirections = {
                         {1, 1},   // Up and right
                         {1, 0},   // Up
@@ -135,18 +134,18 @@ public class ChessPiece {
                         {-1, 0},  // Down
                         {-1, -1}, // Down and left
                 };
-                validMoves = findDistanceMoves(board, myPosition, queenDirections);
-                break;
-            case BISHOP:
+                yield findDistanceMoves(board, myPosition, queenDirections);
+            }
+            case BISHOP -> {
                 int[][] bishopDirections = {
                         {1, 1},   // Up and right
                         {1, -1},  // Up and left
                         {-1, 1},  // Down and right
                         {-1, -1}, // Down and left
                 };
-                validMoves = findDistanceMoves(board, myPosition, bishopDirections);
-                break;
-            case KNIGHT:
+                yield findDistanceMoves(board, myPosition, bishopDirections);
+            }
+            case KNIGHT -> {
                 ChessPosition[] knightPositions = {
                         new ChessPosition(myRow + 2, myCol + 1), //Up two and right one
                         new ChessPosition(myRow + 2, myCol - 1), //Up two and left one
@@ -157,79 +156,88 @@ public class ChessPiece {
                         new ChessPosition(myRow - 2, myCol + 1), //Down two and right one
                         new ChessPosition(myRow - 2, myCol - 1)  //Down two and left one
                 };
-                validMoves = findOtherMoves(board, myPosition, knightPositions);
-                break;
-            case ROOK:
+                yield findOtherMoves(board, myPosition, knightPositions);
+            }
+            case ROOK -> {
                 int[][] rookDirections = {
                         {1, 0},  //Up
                         {-1, 0}, //Down
                         {0, 1},  //Right
                         {0, -1}, //Left
                 };
-                validMoves = findDistanceMoves(board, myPosition, rookDirections);
-                break;
-            case PAWN:
+                yield findDistanceMoves(board, myPosition, rookDirections);
+            }
+            case PAWN -> {
                 Collection<ChessMove> pawnMoves = new ArrayList<>();
-                if (this.teamColor == ChessGame.TeamColor.BLACK) { // ! Black pawns - move down board
-                    ChessPosition BlackPawnOneSquare = new ChessPosition(myRow - 1, myCol); //Standard move
-                    ChessPosition BlackPawnTakeLeft = new ChessPosition(myRow - 1, myCol - 1); //Diagonal capture
-                    ChessPosition BlackPawnTakeRight = new ChessPosition(myRow - 1, myCol + 1); //Diagonal capture
-                    if (myRow != 2) { // * Pawn is not promoting
-                        if (board.getPiece(BlackPawnOneSquare) == null) { // * One square
-                            pawnMoves.add(new ChessMove(myPosition, BlackPawnOneSquare, null));
-                            if (myRow == 7) { // * First pawn move
-                                ChessPosition BlackPawnTwoSquares = new ChessPosition(myRow - 2, myCol); // * Two-square move
-                                if (board.getPiece(BlackPawnTwoSquares) == null) { // * Move is available
-                                    pawnMoves.add(new ChessMove(myPosition, BlackPawnTwoSquares, null));
-                                }
-                            }
-                        } if (myCol > 1) { // ? Capture left
-                            if (board.getPiece(BlackPawnTakeLeft) != null) {
-                                if (board.getPiece(BlackPawnTakeLeft).teamColor == ChessGame.TeamColor.WHITE) {
-                                    pawnMoves.add(new ChessMove(myPosition, BlackPawnTakeLeft, null));
-                                }
-                            }
-                        } if (myCol < 8) { // ? Capture right
-                            if (board.getPiece(BlackPawnTakeRight) != null) {
-                                if (board.getPiece(BlackPawnTakeRight).teamColor == ChessGame.TeamColor.WHITE) {
-                                    pawnMoves.add(new ChessMove(myPosition, BlackPawnTakeRight, null));
-                                }
-                            }
+                findPawnMoves(board, myPosition, pawnMoves);
+                yield pawnMoves;
+            }
+        };
+    }
+
+    public void findPawnMoves(ChessBoard board, ChessPosition myPosition, Collection<ChessMove> pawnMoves) {
+        int myRow = myPosition.getRow();
+        int myCol = myPosition.getColumn();
+        if (this.teamColor == ChessGame.TeamColor.BLACK) { // ! Black pawns - move down board
+            ChessPosition BlackPawnOneSquare = new ChessPosition(myRow - 1, myCol); //Standard move
+            ChessPosition BlackPawnTakeLeft = new ChessPosition(myRow - 1, myCol - 1); //Diagonal capture
+            ChessPosition BlackPawnTakeRight = new ChessPosition(myRow - 1, myCol + 1); //Diagonal capture
+            if (myRow != 2) { // * Pawn is not promoting
+                if (board.getPiece(BlackPawnOneSquare) == null) { // * One square
+                    pawnMoves.add(new ChessMove(myPosition, BlackPawnOneSquare, null));
+                    if (myRow == 7) { // * First pawn move
+                        ChessPosition BlackPawnTwoSquares = new ChessPosition(myRow - 2, myCol); // * Two-square move
+                        if (board.getPiece(BlackPawnTwoSquares) == null) { // * Move is available
+                            pawnMoves.add(new ChessMove(myPosition, BlackPawnTwoSquares, null));
                         }
-                    } else { // ~ Pawn is promoting
-                        pawnPromote(board, myPosition, pawnMoves, BlackPawnOneSquare, BlackPawnTakeLeft, BlackPawnTakeRight);
                     }
-                } else { // ! White pawns - move up board
-                    ChessPosition WhitePawnOneSquare = new ChessPosition(myRow + 1, myCol); //Standard move
-                    ChessPosition WhitePawnTakeLeft = new ChessPosition(myRow + 1, myCol - 1); //Diagonal capture
-                    ChessPosition WhitePawnTakeRight = new ChessPosition(myRow + 1, myCol + 1); //Diagonal capture
-                    if (myRow != 7) { // * Pawn is not promoting
-                        if (board.getPiece(WhitePawnOneSquare) == null) { // * One square
-                            pawnMoves.add(new ChessMove(myPosition, WhitePawnOneSquare, null));
-                            if (myRow == 2) { // * First pawn move
-                                ChessPosition WhitePawnTwoSquares = new ChessPosition(myRow + 2, myCol); // * Two-square move
-                                if (board.getPiece(WhitePawnTwoSquares) == null) { // * Move is available
-                                    pawnMoves.add(new ChessMove(myPosition, WhitePawnTwoSquares, null));
-                                }
-                            }
-                        } if (myCol > 1) { // ? Capture left
-                            if (board.getPiece(WhitePawnTakeLeft) != null) {
-                                if (board.getPiece(WhitePawnTakeLeft).teamColor == ChessGame.TeamColor.BLACK) {
-                                    pawnMoves.add(new ChessMove(myPosition, WhitePawnTakeLeft, null));
-                                }
-                            }
-                        } if (myCol < 8) { // ? Capture right
-                            if (board.getPiece(WhitePawnTakeRight) != null) {
-                                if (board.getPiece(WhitePawnTakeRight).teamColor == ChessGame.TeamColor.BLACK) {
-                                    pawnMoves.add(new ChessMove(myPosition, WhitePawnTakeRight, null));
-                                }
-                            }
+                } if (myCol > 1) { // ? Capture left
+                    if (board.getPiece(BlackPawnTakeLeft) != null) {
+                        if (board.getPiece(BlackPawnTakeLeft).teamColor == ChessGame.TeamColor.WHITE) {
+                            pawnMoves.add(new ChessMove(myPosition, BlackPawnTakeLeft, null));
                         }
-                    } else { // ~ Pawn is promoting
-                        pawnPromote(board, myPosition, pawnMoves, WhitePawnOneSquare, WhitePawnTakeLeft, WhitePawnTakeRight);
                     }
-                } validMoves = pawnMoves;
-        } return validMoves;
+                } if (myCol < 8) { // ? Capture right
+                    if (board.getPiece(BlackPawnTakeRight) != null) {
+                        if (board.getPiece(BlackPawnTakeRight).teamColor == ChessGame.TeamColor.WHITE) {
+                            pawnMoves.add(new ChessMove(myPosition, BlackPawnTakeRight, null));
+                        }
+                    }
+                }
+            } else { // ~ Pawn is promoting
+                pawnPromote(board, myPosition, pawnMoves, BlackPawnOneSquare, BlackPawnTakeLeft, BlackPawnTakeRight);
+            }
+        } else { // ! White pawns - move up board
+            ChessPosition WhitePawnOneSquare = new ChessPosition(myRow + 1, myCol); //Standard move
+            ChessPosition WhitePawnTakeLeft = new ChessPosition(myRow + 1, myCol - 1); //Diagonal capture
+            ChessPosition WhitePawnTakeRight = new ChessPosition(myRow + 1, myCol + 1); //Diagonal capture
+            if (myRow != 7) { // * Pawn is not promoting
+                if (board.getPiece(WhitePawnOneSquare) == null) { // * One square
+                    pawnMoves.add(new ChessMove(myPosition, WhitePawnOneSquare, null));
+                    if (myRow == 2) { // * First pawn move
+                        ChessPosition WhitePawnTwoSquares = new ChessPosition(myRow + 2, myCol); // * Two-square move
+                        if (board.getPiece(WhitePawnTwoSquares) == null) { // * Move is available
+                            pawnMoves.add(new ChessMove(myPosition, WhitePawnTwoSquares, null));
+                        }
+                    }
+                } if (myCol > 1) { // ? Capture left
+                    if (board.getPiece(WhitePawnTakeLeft) != null) {
+                        if (board.getPiece(WhitePawnTakeLeft).teamColor == ChessGame.TeamColor.BLACK) {
+                            pawnMoves.add(new ChessMove(myPosition, WhitePawnTakeLeft, null));
+                        }
+                    }
+                } if (myCol < 8) { // ? Capture right
+                    if (board.getPiece(WhitePawnTakeRight) != null) {
+                        if (board.getPiece(WhitePawnTakeRight).teamColor == ChessGame.TeamColor.BLACK) {
+                            pawnMoves.add(new ChessMove(myPosition, WhitePawnTakeRight, null));
+                        }
+                    }
+                }
+            } else { // ~ Pawn is promoting
+                pawnPromote(board, myPosition, pawnMoves, WhitePawnOneSquare, WhitePawnTakeLeft, WhitePawnTakeRight);
+            }
+        }
+
     }
     //Find possible pawn promotion moves
     public void pawnPromote(ChessBoard board, ChessPosition myPosition, Collection<ChessMove> pawnMoves, ChessPosition PawnOneSquare, ChessPosition PawnTakeLeft, ChessPosition PawnTakeRight) {
