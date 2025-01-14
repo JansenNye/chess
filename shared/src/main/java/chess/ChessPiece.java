@@ -237,28 +237,23 @@ public class ChessPiece {
                 pawnPromote(board, myPosition, pawnMoves, WhitePawnOneSquare, WhitePawnTakeLeft, WhitePawnTakeRight);
             }
         }
-
     }
 
     public Collection<ChessMove> addCastlingMoves(ChessBoard board, ChessPosition myPosition, Collection<ChessMove> moves) {
         int myRow = myPosition.getRow();
         int myCol = myPosition.getColumn();
         if (!this.hasMoved) {
-            if (board.getPiece(new ChessPosition(myRow, myCol + 1)) == null && board.getPiece(new ChessPosition(myRow, myCol + 2)) == null) {
-                ChessPiece kingRook = board.getPiece(new ChessPosition(myRow, myCol + 3)); //King-side castle
-                if (kingRook != null && !kingRook.hasMoved) { //Check if moving through check
-                    board.addPiece(myPosition, null);
-                    board.addPiece(new ChessPosition(myRow, myCol + 1), this);
-                    if (!ChessGame.staticIsInCheck(new ChessPosition(myRow, myCol + 1), board)){
-                        moves.add(new ChessMove(myPosition, new ChessPosition(myRow, myCol + 2), null));
-                    }
-                } ChessPiece queenRook = board.getPiece(new ChessPosition(myRow, myCol - 4));
+            if (myCol + 3 <= 8 && board.getPiece(new ChessPosition(myRow, myCol + 1)) == null && //King-side
+                    board.getPiece(new ChessPosition(myRow, myCol + 2)) == null) {
+                ChessPiece kingRook = board.getPiece(new ChessPosition(myRow, myCol + 3));
+                if (kingRook != null && !kingRook.hasMoved) {
+                    moves.add(new ChessMove(myPosition, new ChessPosition(myRow, myCol + 2), null));
+                }
+            } if (myCol - 4 >= 1 && board.getPiece(new ChessPosition(myRow, myCol - 1)) == null && //Queen-side
+                    board.getPiece(new ChessPosition(myRow, myCol - 2)) == null) {
+                ChessPiece queenRook = board.getPiece(new ChessPosition(myRow, myCol - 4));
                 if (queenRook != null && !queenRook.hasMoved) {
-                    board.addPiece(myPosition, null);
-                    board.addPiece(new ChessPosition(myRow, myCol - 1), this);
-                    if (!ChessGame.staticIsInCheck(new ChessPosition(myRow, myCol - 1), board)){
-                        moves.add(new ChessMove(myPosition, new ChessPosition(myRow, myCol - 2), null));
-                    }
+                    moves.add(new ChessMove(myPosition, new ChessPosition(myRow, myCol - 2), null));
                 }
             }
         } return moves;

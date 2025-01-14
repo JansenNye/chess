@@ -80,7 +80,9 @@ public class ChessGame {
         ChessPosition startPosition = move.getStartPosition();
         ChessPosition endPosition = move.getEndPosition();
         ChessPiece piece = this.board.getPiece(startPosition);
-        ChessGame.TeamColor teamToMove = piece.getTeamColor();
+        if (piece == null) {
+            throw new InvalidMoveException("No piece at start position");
+        } ChessGame.TeamColor teamToMove = piece.getTeamColor();
         if (this.teamTurn != teamToMove) {
             throw new InvalidMoveException("Not your turn");
         }
@@ -95,11 +97,29 @@ public class ChessGame {
                 undoMove(move);
                 throw new InvalidMoveException("You are in check");
             }
-        }
-        this.teamTurn = this.teamTurn == TeamColor.WHITE ? TeamColor.BLACK : TeamColor.WHITE; //Set team turn
+        } this.teamTurn = this.teamTurn == TeamColor.WHITE ? TeamColor.BLACK : TeamColor.WHITE; //Set team turn
         piece.setHasMoved(true); //Mark the piece as having moved
-        if (piece.getPieceType() == ChessPiece.PieceType.PAWN && (startPosition.getRow() - endPosition.getRow()) == 2) {
-            piece.setPawnJustDoubleMoved(true);
+        if (piece.getPieceType() == ChessPiece.PieceType.KING) {
+            if (Math.abs(startPosition.getColumn() - endPosition.getColumn()) == 2) { //Castling
+                int rookStartCol = move.getEndPosition().getColumn() == 7 ? 8 : 1;
+                int rookEndCol = move.getEndPosition().getColumn() == 7 ? 6 : 4;
+                ChessPosition rookStart = new ChessPosition(move.getStartPosition().getRow(), rookStartCol);
+                ChessPosition rookEnd = new ChessPosition(move.getStartPosition().getRow(), rookEndCol);
+                ChessPiece rook = board.getPiece(rookStart);
+                board.addPiece(rookEnd, rook);
+                board.addPiece(rookStart, null);
+                rook.setHasMoved(true);
+            }
+        } for (int i = 1; i <= 8; i++) {
+            for (int j = 1; j <= 8; j++) {
+                ChessPosition pos = new ChessPosition(i, j);
+                ChessPiece p = board.getPiece(pos);
+                if (p != null && p.getPieceType() == ChessPiece.PieceType.PAWN) {
+                    p.setPawnJustDoubleMoved(false);
+                }
+            }
+        } if (piece.getPieceType() == ChessPiece.PieceType.PAWN) {
+            piece.setPawnJustDoubleMoved(startPosition.getRow() - endPosition.getRow() == 2);
         }
     }
 
@@ -127,8 +147,7 @@ public class ChessGame {
                             whiteKingPosition = position;
                         } else {
                             blackKingPosition = position;
-                        }
-                        break;
+                        } break;
                     }
                 }
             }
