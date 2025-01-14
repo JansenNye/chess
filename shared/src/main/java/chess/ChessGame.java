@@ -50,7 +50,7 @@ public class ChessGame {
      */
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
         ChessPiece piece = this.board.getPiece(startPosition);
-        if(piece == null) {
+        if(piece == null) { //No piece at the position
             return null;
         } Collection<ChessMove> potentialMoves = piece.pieceMoves(this.board, startPosition);
         for (ChessMove move : potentialMoves) {
@@ -68,16 +68,17 @@ public class ChessGame {
      * @throws InvalidMoveException if move is invalid
      */
     public void makeMove(ChessMove move) throws InvalidMoveException {
-        if (this.teamTurn != this.board.getPiece(move.getStartPosition()).getTeamColor()) {
+        ChessPiece piece = this.board.getPiece(move.getStartPosition());
+        if (this.teamTurn != piece.getTeamColor()) {
             throw new InvalidMoveException("Not your turn");
         }
-        this.board.addPiece(move.getStartPosition(), null); //Remove the piece at the start position
         tryMove(move);
         if (isInCheck(this.teamTurn)) {
-            this.board.addPiece(move.getStartPosition(), this.board.getPiece(move.getStartPosition()));
-            this.board.addPiece(move.getEndPosition(), null); //Undo move
+            undoMove(move);
             throw new InvalidMoveException("You are in check");
         }
+        this.teamTurn = this.teamTurn == TeamColor.WHITE ? TeamColor.BLACK : TeamColor.WHITE; //Set team turn
+        piece.setHasMoved(true); //Mark the piece as having moved
     }
 
     public void undoMove(ChessMove move) {
@@ -175,7 +176,6 @@ public class ChessGame {
      * @return True if the specified team is in stalemate, otherwise false
      */
     public boolean isInStalemate(TeamColor teamColor) {
-        Collection<ChessMove> potentialMoves;
         if (isInCheck(teamColor)) {
             return false;
         } for(int i = 1; i <= 8; i++) {

@@ -27,6 +27,7 @@ public class ChessPiece {
 
     private final ChessGame.TeamColor teamColor;
     private final PieceType pieceType;
+    private boolean hasMoved;
 
     public ChessPiece(ChessGame.TeamColor pieceColor, ChessPiece.PieceType type) {
         this.teamColor = pieceColor;
@@ -59,6 +60,9 @@ public class ChessPiece {
         return this.pieceType;
     }
 
+    public void setHasMoved(boolean hasMoved) {
+        this.hasMoved = hasMoved;
+    }
     //Finds moves for Queen, Rook and Bishop
     public Collection<ChessMove> findDistanceMoves(ChessBoard board, ChessPosition myPosition, int[][] directions) {
         Collection<ChessMove> validMoves = new ArrayList<>();
@@ -120,10 +124,29 @@ public class ChessPiece {
                         new ChessPosition(myRow - 1, myCol + 1), //Down and right
                         new ChessPosition(myRow - 1, myCol), //Down
                         new ChessPosition(myRow - 1, myCol - 1) //Down and left
-                };
-                yield findOtherMoves(board, myPosition, kingPositions);
-            }
-            case QUEEN -> {
+                }; Collection<ChessMove> kingMoves = findOtherMoves(board, myPosition, kingPositions);
+                if (!this.hasMoved) { //Castling
+                    if (board.getPiece(new ChessPosition(myRow, myCol + 1)) == null && board.getPiece(new ChessPosition(myRow, myCol + 2)) == null) {
+                        ChessPiece kingRook = board.getPiece(new ChessPosition(myRow, myCol + 3)); //King-side castle
+                        if (kingRook != null && !kingRook.hasMoved) {
+                            for(int i = 1; i <= 8; i++) {
+                                for (int j = 1; j <= 8; j++) {
+                                    ChessPosition position = new ChessPosition(i, j);
+                                    ChessPiece piece = board.getPiece(position);
+                                    Collection<ChessMove> pieceMoves = piece.pieceMoves(board, position);
+                                    for (ChessMove move : pieceMoves) {
+                                        if (teamColor == ChessGame.TeamColor.WHITE) {
+                                            if (move.getEndPosition() == myPosition) {
+                                                break;
+                                            }
+                                        }
+                                    }
+                                }
+                            } kingMoves.add(new ChessMove(myPosition, new ChessPosition(myRow, myCol + 2), null));
+                        }
+                    }
+                } yield kingMoves;
+            } case QUEEN -> {
                 int[][] queenDirections = {
                         {1, 1},   // Up and right
                         {1, 0},   // Up
@@ -133,10 +156,8 @@ public class ChessPiece {
                         {-1, 1},  // Down and right
                         {-1, 0},  // Down
                         {-1, -1}, // Down and left
-                };
-                yield findDistanceMoves(board, myPosition, queenDirections);
-            }
-            case BISHOP -> {
+                }; yield findDistanceMoves(board, myPosition, queenDirections);
+            } case BISHOP -> {
                 int[][] bishopDirections = {
                         {1, 1},   // Up and right
                         {1, -1},  // Up and left
@@ -144,8 +165,7 @@ public class ChessPiece {
                         {-1, -1}, // Down and left
                 };
                 yield findDistanceMoves(board, myPosition, bishopDirections);
-            }
-            case KNIGHT -> {
+            } case KNIGHT -> {
                 ChessPosition[] knightPositions = {
                         new ChessPosition(myRow + 2, myCol + 1), //Up two and right one
                         new ChessPosition(myRow + 2, myCol - 1), //Up two and left one
@@ -157,8 +177,7 @@ public class ChessPiece {
                         new ChessPosition(myRow - 2, myCol - 1)  //Down two and left one
                 };
                 yield findOtherMoves(board, myPosition, knightPositions);
-            }
-            case ROOK -> {
+            } case ROOK -> {
                 int[][] rookDirections = {
                         {1, 0},  //Up
                         {-1, 0}, //Down
@@ -166,8 +185,7 @@ public class ChessPiece {
                         {0, -1}, //Left
                 };
                 yield findDistanceMoves(board, myPosition, rookDirections);
-            }
-            case PAWN -> {
+            } case PAWN -> {
                 Collection<ChessMove> pawnMoves = new ArrayList<>();
                 findPawnMoves(board, myPosition, pawnMoves);
                 yield pawnMoves;
