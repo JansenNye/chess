@@ -28,6 +28,7 @@ public class ChessPiece {
     private final ChessGame.TeamColor teamColor;
     private final PieceType pieceType;
     private boolean hasMoved;
+    public boolean pawnJustDoubleMoved;
 
     public ChessPiece(ChessGame.TeamColor pieceColor, ChessPiece.PieceType type) {
         this.teamColor = pieceColor;
@@ -125,27 +126,8 @@ public class ChessPiece {
                         new ChessPosition(myRow - 1, myCol), //Down
                         new ChessPosition(myRow - 1, myCol - 1) //Down and left
                 }; Collection<ChessMove> kingMoves = findOtherMoves(board, myPosition, kingPositions);
-                if (!this.hasMoved) { //Castling
-                    if (board.getPiece(new ChessPosition(myRow, myCol + 1)) == null && board.getPiece(new ChessPosition(myRow, myCol + 2)) == null) {
-                        ChessPiece kingRook = board.getPiece(new ChessPosition(myRow, myCol + 3)); //King-side castle
-                        if (kingRook != null && !kingRook.hasMoved) {
-                            for(int i = 1; i <= 8; i++) {
-                                for (int j = 1; j <= 8; j++) {
-                                    ChessPosition position = new ChessPosition(i, j);
-                                    ChessPiece piece = board.getPiece(position);
-                                    Collection<ChessMove> pieceMoves = piece.pieceMoves(board, position);
-                                    for (ChessMove move : pieceMoves) {
-                                        if (teamColor == ChessGame.TeamColor.WHITE) {
-                                            if (move.getEndPosition() == myPosition) {
-                                                break;
-                                            }
-                                        }
-                                    }
-                                }
-                            } kingMoves.add(new ChessMove(myPosition, new ChessPosition(myRow, myCol + 2), null));
-                        }
-                    }
-                } yield kingMoves;
+                kingMoves = addCastlingMoves(board, myPosition, kingMoves);
+                yield kingMoves;
             } case QUEEN -> {
                 int[][] queenDirections = {
                         {1, 1},   // Up and right
@@ -257,6 +239,30 @@ public class ChessPiece {
         }
 
     }
+
+    public Collection<ChessMove> addCastlingMoves(ChessBoard board, ChessPosition myPosition, Collection<ChessMove> moves) {
+        int myRow = myPosition.getRow();
+        int myCol = myPosition.getColumn();
+        if (!this.hasMoved) {
+            if (board.getPiece(new ChessPosition(myRow, myCol + 1)) == null && board.getPiece(new ChessPosition(myRow, myCol + 2)) == null) {
+                ChessPiece kingRook = board.getPiece(new ChessPosition(myRow, myCol + 3)); //King-side castle
+                if (kingRook != null && !kingRook.hasMoved) { //Check if moving through check
+                    board.addPiece(myPosition, null);
+                    board.addPiece(new ChessPosition(myRow, myCol + 1), this);
+                    if (!ChessGame.staticIsInCheck(new ChessPosition(myRow, myCol + 1), board)){
+                        moves.add(new ChessMove(myPosition, new ChessPosition(myRow, myCol + 2), null));
+                    }
+                } ChessPiece queenRook = board.getPiece(new ChessPosition(myRow, myCol - 4));
+                if (queenRook != null && !queenRook.hasMoved) {
+                    board.addPiece(myPosition, null);
+                    board.addPiece(new ChessPosition(myRow, myCol - 1), this);
+                    if (!ChessGame.staticIsInCheck(new ChessPosition(myRow, myCol - 1), board)){
+                        moves.add(new ChessMove(myPosition, new ChessPosition(myRow, myCol - 2), null));
+                    }
+                }
+            }
+        } return moves;
+    }
     //Find possible pawn promotion moves
     public void pawnPromote(ChessBoard board, ChessPosition myPosition, Collection<ChessMove> pawnMoves, ChessPosition PawnOneSquare, ChessPosition PawnTakeLeft, ChessPosition PawnTakeRight) {
         pawnMoves.add(new ChessMove(myPosition, PawnOneSquare, PieceType.QUEEN));
@@ -281,5 +287,10 @@ public class ChessPiece {
             }
         }
     }
+
+    public void setPawnJustDoubleMoved(boolean pawnJustDoubleMoved) {
+        this.pawnJustDoubleMoved = pawnJustDoubleMoved;
+    }
+
 }
 
