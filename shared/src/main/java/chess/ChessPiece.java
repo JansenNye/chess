@@ -65,7 +65,7 @@ public class ChessPiece {
         this.hasMoved = hasMoved;
     }
     //Finds moves for Queen, Rook and Bishop
-    public Collection<ChessMove> findDistanceMoves(ChessBoard board, ChessPosition myPosition, int[][] directions) {
+    public static Collection<ChessMove> findDistanceMoves(ChessBoard board, ChessPosition myPosition, int[][] directions) {
         Collection<ChessMove> validMoves = new ArrayList<>();
         for (int[] direction : directions) {
             int row = myPosition.getRow();
@@ -81,7 +81,7 @@ public class ChessPiece {
                 if (occupyingPiece == null) { //Empty square, go ahead
                     validMoves.add(new ChessMove(myPosition, newPosition, null));
                 } else {
-                    if (occupyingPiece.getTeamColor() != this.teamColor) {
+                    if (occupyingPiece.getTeamColor() != board.getPiece(myPosition).getTeamColor()) {
                         validMoves.add(new ChessMove(myPosition, newPosition, null));
                     } break; //Same-color piece is in the way
                 }
