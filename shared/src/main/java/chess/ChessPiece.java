@@ -90,14 +90,14 @@ public class ChessPiece {
     }
 
     //Finds moves for King and Knight
-    public Collection<ChessMove> findOtherMoves(ChessBoard board, ChessPosition myPosition, ChessPosition[] positions) {
+    public static Collection<ChessMove> findOtherMoves(ChessBoard board, ChessPosition myPosition, ChessPosition[] positions) {
         Collection<ChessMove> validMoves = new ArrayList<>();
         for (ChessPosition position : positions) {
             if (position.getRow() >= 1 && position.getRow() <= 8 && position.getColumn() >= 1 && position.getColumn() <= 8) { //In-bounds
                 ChessPiece occupyingPiece = board.getPiece(position);
                 if (occupyingPiece == null) { //No piece at target square
                     validMoves.add(new ChessMove(myPosition, position, null));
-                } else if (occupyingPiece.getTeamColor() != this.teamColor) { //Capture opponent's piece on target square
+                } else if (occupyingPiece.getTeamColor() != board.getPiece(myPosition).getTeamColor()) { //Capture opponent's piece on target square
                     validMoves.add(new ChessMove(myPosition, position, null));
                 }
             }
@@ -175,10 +175,73 @@ public class ChessPiece {
         };
     }
 
-    public void findPawnMoves(ChessBoard board, ChessPosition myPosition, Collection<ChessMove> pawnMoves) {
+    public static Collection<ChessMove> staticPieceMoves(ChessBoard board, ChessPosition myPosition) {
         int myRow = myPosition.getRow();
         int myCol = myPosition.getColumn();
-        if (this.teamColor == ChessGame.TeamColor.BLACK) { // ! Black pawns - move down board
+        return switch (board.getPiece(myPosition).getPieceType()) {
+            case KING -> {
+                ChessPosition[] kingPositions = {
+                        new ChessPosition(myRow + 1, myCol + 1), //Up and right
+                        new ChessPosition(myRow + 1, myCol), //Up
+                        new ChessPosition(myRow + 1, myCol - 1), //Up and left
+                        new ChessPosition(myRow, myCol + 1), //Right
+                        new ChessPosition(myRow, myCol - 1), //Left
+                        new ChessPosition(myRow - 1, myCol + 1), //Down and right
+                        new ChessPosition(myRow - 1, myCol), //Down
+                        new ChessPosition(myRow - 1, myCol - 1) //Down and left
+                }; Collection<ChessMove> kingMoves = findOtherMoves(board, myPosition, kingPositions);
+                kingMoves = addCastlingMoves(board, myPosition, kingMoves);
+                yield kingMoves;
+            } case QUEEN -> {
+                int[][] queenDirections = {
+                        {1, 1},   // Up and right
+                        {1, 0},   // Up
+                        {1, -1},  // Up and left
+                        {0, 1},   // Right
+                        {0, -1},  // Left
+                        {-1, 1},  // Down and right
+                        {-1, 0},  // Down
+                        {-1, -1}, // Down and left
+                }; yield findDistanceMoves(board, myPosition, queenDirections);
+            } case BISHOP -> {
+                int[][] bishopDirections = {
+                        {1, 1},   // Up and right
+                        {1, -1},  // Up and left
+                        {-1, 1},  // Down and right
+                        {-1, -1}, // Down and left
+                };
+                yield findDistanceMoves(board, myPosition, bishopDirections);
+            } case KNIGHT -> {
+                ChessPosition[] knightPositions = {
+                        new ChessPosition(myRow + 2, myCol + 1), //Up two and right one
+                        new ChessPosition(myRow + 2, myCol - 1), //Up two and left one
+                        new ChessPosition(myRow + 1, myCol + 2), //Up one and right two
+                        new ChessPosition(myRow + 1, myCol - 2), //Up one and left two
+                        new ChessPosition(myRow - 1, myCol + 2), //Down one and right two
+                        new ChessPosition(myRow - 1, myCol - 2), //Down one and left two
+                        new ChessPosition(myRow - 2, myCol + 1), //Down two and right one
+                        new ChessPosition(myRow - 2, myCol - 1)  //Down two and left one
+                };
+                yield findOtherMoves(board, myPosition, knightPositions);
+            } case ROOK -> {
+                int[][] rookDirections = {
+                        {1, 0},  //Up
+                        {-1, 0}, //Down
+                        {0, 1},  //Right
+                        {0, -1}, //Left
+                };
+                yield findDistanceMoves(board, myPosition, rookDirections);
+            } case PAWN -> {
+                Collection<ChessMove> pawnMoves = new ArrayList<>();
+                findPawnMoves(board, myPosition, pawnMoves);
+                yield pawnMoves;
+            }
+        };
+    }
+    public static void findPawnMoves(ChessBoard board, ChessPosition myPosition, Collection<ChessMove> pawnMoves) {
+        int myRow = myPosition.getRow();
+        int myCol = myPosition.getColumn();
+        if (board.getPiece(myPosition).getTeamColor() == ChessGame.TeamColor.BLACK) { // ! Black pawns - move down board
             ChessPosition BlackPawnOneSquare = new ChessPosition(myRow - 1, myCol); //Standard move
             ChessPosition BlackPawnTakeLeft = new ChessPosition(myRow - 1, myCol - 1); //Diagonal capture
             ChessPosition BlackPawnTakeRight = new ChessPosition(myRow - 1, myCol + 1); //Diagonal capture
@@ -239,10 +302,10 @@ public class ChessPiece {
         }
     }
 
-    public Collection<ChessMove> addCastlingMoves(ChessBoard board, ChessPosition myPosition, Collection<ChessMove> moves) {
+    public static Collection<ChessMove> addCastlingMoves(ChessBoard board, ChessPosition myPosition, Collection<ChessMove> moves) {
         int myRow = myPosition.getRow();
         int myCol = myPosition.getColumn();
-        if (!this.hasMoved) {
+        if (!board.getPiece(myPosition).hasMoved) {
             if (myCol + 3 <= 8 && board.getPiece(new ChessPosition(myRow, myCol + 1)) == null && //King-side
                     board.getPiece(new ChessPosition(myRow, myCol + 2)) == null) {
                 ChessPiece kingRook = board.getPiece(new ChessPosition(myRow, myCol + 3));
@@ -259,7 +322,7 @@ public class ChessPiece {
         } return moves;
     }
     //Find possible pawn promotion moves
-    public void pawnPromote(ChessBoard board, ChessPosition myPosition, Collection<ChessMove> pawnMoves, ChessPosition PawnOneSquare, ChessPosition PawnTakeLeft, ChessPosition PawnTakeRight) {
+    public static void pawnPromote(ChessBoard board, ChessPosition myPosition, Collection<ChessMove> pawnMoves, ChessPosition PawnOneSquare, ChessPosition PawnTakeLeft, ChessPosition PawnTakeRight) {
         pawnMoves.add(new ChessMove(myPosition, PawnOneSquare, PieceType.QUEEN));
         pawnMoves.add(new ChessMove(myPosition, PawnOneSquare, PieceType.KNIGHT));
         pawnMoves.add(new ChessMove(myPosition, PawnOneSquare, PieceType.ROOK));
@@ -272,7 +335,7 @@ public class ChessPiece {
     }
 
     //Helper function for pawnPromote handling pawn promotion captures
-    public void pawnPromotionCapture(ChessBoard board, ChessPosition myPosition, Collection<ChessMove> pawnMoves, ChessPosition pawnTake) {
+    public static void pawnPromotionCapture(ChessBoard board, ChessPosition myPosition, Collection<ChessMove> pawnMoves, ChessPosition pawnTake) {
         if (board.getPiece(pawnTake) != null) {
             if (board.getPiece(pawnTake).teamColor != board.getPiece(myPosition).teamColor) {
                 pawnMoves.add(new ChessMove(myPosition, pawnTake, PieceType.QUEEN));

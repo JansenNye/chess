@@ -54,6 +54,7 @@ public class ChessGame {
      */
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
         ChessPiece piece = this.board.getPiece(startPosition);
+        boolean useDistance = false;
         if (piece == null) { //No piece at the position
             return null;
         } Collection<ChessMove> potentialMoves = piece.pieceMoves(this.board, startPosition);
@@ -68,7 +69,9 @@ public class ChessGame {
                     potentialMoves.remove(move);
                 }
             } undoMove(move);
-        } return potentialMoves;
+        } Collection<ChessMove> potentialMoves2 = piece.pieceMoves(this.board, startPosition);
+        potentialMoves.retainAll(potentialMoves2);
+        return potentialMoves;
     }
 
     /**
@@ -92,43 +95,14 @@ public class ChessGame {
         if (this.board.getPiece(endPosition) != null && this.board.getPiece(endPosition).getTeamColor() == teamToMove) {
             throw new InvalidMoveException("Cannot take own piece");
         }
-        int[][] directions = switch (piece.getPieceType()) {
-            case BISHOP -> {
-                useDistance = true;
-                yield new int[][]{
-                        {1, 1},   // Up and right
-                        {1, -1},  // Up and left
-                        {-1, 1},  // Down and right
-                        {-1, -1}, // Down and left
-                };
-            } case ROOK -> {
-                useDistance = true;
-                yield new int[][]{
-                        {1, 0},  //Up
-                        {-1, 0}, //Down
-                        {0, 1},  //Right
-                        {0, -1}, //Left
-                };
-            } case QUEEN -> {
-                useDistance = true;
-                yield new int[][]{
-                        {1, 1},   // Up and right
-                        {1, 0},   // Up
-                        {1, -1},  // Up and left
-                        {0, 1},   // Right
-                        {0, -1},  // Left
-                        {-1, 1},  // Down and right
-                        {-1, 0},  // Down
-                        {-1, -1}, // Down and left
-                };
-            } default -> null;
-        }; Collection<ChessMove> moveCollection = List.of();
-        if (useDistance) {
-            moveCollection = ChessPiece.findDistanceMoves(board, startPosition, directions);
-            if (!moveCollection.contains(move)) {
-                throw new InvalidMoveException("Invalid move");
-            }
-        } tryMove(move);
+        Collection<ChessMove> potentialMoves = validMoves(startPosition);
+        if (potentialMoves == null) {
+            throw new InvalidMoveException("No valid moves for piece");
+        }
+        if (!potentialMoves.contains(move)) {
+            throw new InvalidMoveException("Invalid move");
+        }
+        tryMove(move);
         if (teamToMove == TeamColor.WHITE) {
             if (staticIsInCheck(whiteKingPosition, this.board)) {
                 undoMove(move);
@@ -149,8 +123,7 @@ public class ChessGame {
                 if (ChessGame.staticIsInCheck(intermediatePosition, board)) {
                     undoMove(move);
                     throw new InvalidMoveException("Cannot castle through check");
-                }
-                int rookStartCol = move.getEndPosition().getColumn() == 7 ? 8 : 1;
+                } int rookStartCol = move.getEndPosition().getColumn() == 7 ? 8 : 1;
                 int rookEndCol = move.getEndPosition().getColumn() == 7 ? 6 : 4;
                 ChessPosition rookStart = new ChessPosition(move.getStartPosition().getRow(), rookStartCol);
                 ChessPosition rookEnd = new ChessPosition(move.getStartPosition().getRow(), rookEndCol);
