@@ -27,7 +27,7 @@ public class ChessPiece {
 
     private final ChessGame.TeamColor teamColor;
     private final PieceType pieceType;
-    private boolean hasMoved;
+    public boolean hasMoved;
     public boolean pawnJustDoubleMoved;
 
     public ChessPiece(ChessGame.TeamColor pieceColor, ChessPiece.PieceType type) {
@@ -112,238 +112,27 @@ public class ChessPiece {
      * @return Collection of valid moves
      */
     public Collection<ChessMove> pieceMoves(ChessBoard board, ChessPosition myPosition) {
-        int myRow = myPosition.getRow();
-        int myCol = myPosition.getColumn();
         return switch (this.pieceType) {
             case KING -> {
-                ChessPosition[] kingPositions = {
-                        new ChessPosition(myRow + 1, myCol + 1), //Up and right
-                        new ChessPosition(myRow + 1, myCol), //Up
-                        new ChessPosition(myRow + 1, myCol - 1), //Up and left
-                        new ChessPosition(myRow, myCol + 1), //Right
-                        new ChessPosition(myRow, myCol - 1), //Left
-                        new ChessPosition(myRow - 1, myCol + 1), //Down and right
-                        new ChessPosition(myRow - 1, myCol), //Down
-                        new ChessPosition(myRow - 1, myCol - 1) //Down and left
-                }; Collection<ChessMove> kingMoves = findOtherMoves(board, myPosition, kingPositions);
-                kingMoves = addCastlingMoves(board, myPosition, kingMoves);
-                yield kingMoves;
+                KingPieceMoves myKingMoves = new KingPieceMoves(myPosition, board);
+                yield myKingMoves.getKingMoves();
             } case QUEEN -> {
-                int[][] queenDirections = {
-                        {1, 1},   // Up and right
-                        {1, 0},   // Up
-                        {1, -1},  // Up and left
-                        {0, 1},   // Right
-                        {0, -1},  // Left
-                        {-1, 1},  // Down and right
-                        {-1, 0},  // Down
-                        {-1, -1}, // Down and left
-                }; yield findDistanceMoves(board, myPosition, queenDirections);
+                QueenPieceMoves myQueenMoves = new QueenPieceMoves(myPosition, board);
+                yield myQueenMoves.getQueenMoves();
             } case BISHOP -> {
-                int[][] bishopDirections = {
-                        {1, 1},   // Up and right
-                        {1, -1},  // Up and left
-                        {-1, 1},  // Down and right
-                        {-1, -1}, // Down and left
-                };
-                yield findDistanceMoves(board, myPosition, bishopDirections);
+                BishopPieceMoves BishopMoves = new BishopPieceMoves(myPosition, board);
+                yield BishopMoves.getBishopMoves();
             } case KNIGHT -> {
-                ChessPosition[] knightPositions = {
-                        new ChessPosition(myRow + 2, myCol + 1), //Up two and right one
-                        new ChessPosition(myRow + 2, myCol - 1), //Up two and left one
-                        new ChessPosition(myRow + 1, myCol + 2), //Up one and right two
-                        new ChessPosition(myRow + 1, myCol - 2), //Up one and left two
-                        new ChessPosition(myRow - 1, myCol + 2), //Down one and right two
-                        new ChessPosition(myRow - 1, myCol - 2), //Down one and left two
-                        new ChessPosition(myRow - 2, myCol + 1), //Down two and right one
-                        new ChessPosition(myRow - 2, myCol - 1)  //Down two and left one
-                };
-                yield findOtherMoves(board, myPosition, knightPositions);
+                KnightPieceMoves KnightMoves = new KnightPieceMoves(myPosition, board);
+                yield KnightMoves.getKnightMoves();
             } case ROOK -> {
-                int[][] rookDirections = {
-                        {1, 0},  //Up
-                        {-1, 0}, //Down
-                        {0, 1},  //Right
-                        {0, -1}, //Left
-                };
-                yield findDistanceMoves(board, myPosition, rookDirections);
+                RookPieceMoves RookMoves = new RookPieceMoves(myPosition, board);
+                yield RookMoves.getRookMoves();
             } case PAWN -> {
-                Collection<ChessMove> pawnMoves = new ArrayList<>();
-                findPawnMoves(board, myPosition, pawnMoves);
-                yield pawnMoves;
+                PawnPieceMoves PawnMoves = new PawnPieceMoves(myPosition, board);
+                yield PawnMoves.getPawnMoves();
             }
         };
-    }
-
-    public static Collection<ChessMove> staticPieceMoves(ChessBoard board, ChessPosition myPosition) {
-        int myRow = myPosition.getRow();
-        int myCol = myPosition.getColumn();
-        return switch (board.getPiece(myPosition).getPieceType()) {
-            case KING -> {
-                ChessPosition[] kingPositions = {
-                        new ChessPosition(myRow + 1, myCol + 1), //Up and right
-                        new ChessPosition(myRow + 1, myCol), //Up
-                        new ChessPosition(myRow + 1, myCol - 1), //Up and left
-                        new ChessPosition(myRow, myCol + 1), //Right
-                        new ChessPosition(myRow, myCol - 1), //Left
-                        new ChessPosition(myRow - 1, myCol + 1), //Down and right
-                        new ChessPosition(myRow - 1, myCol), //Down
-                        new ChessPosition(myRow - 1, myCol - 1) //Down and left
-                }; Collection<ChessMove> kingMoves = findOtherMoves(board, myPosition, kingPositions);
-                kingMoves = addCastlingMoves(board, myPosition, kingMoves);
-                yield kingMoves;
-            } case QUEEN -> {
-                int[][] queenDirections = {
-                        {1, 1},   // Up and right
-                        {1, 0},   // Up
-                        {1, -1},  // Up and left
-                        {0, 1},   // Right
-                        {0, -1},  // Left
-                        {-1, 1},  // Down and right
-                        {-1, 0},  // Down
-                        {-1, -1}, // Down and left
-                }; yield findDistanceMoves(board, myPosition, queenDirections);
-            } case BISHOP -> {
-                int[][] bishopDirections = {
-                        {1, 1},   // Up and right
-                        {1, -1},  // Up and left
-                        {-1, 1},  // Down and right
-                        {-1, -1}, // Down and left
-                };
-                yield findDistanceMoves(board, myPosition, bishopDirections);
-            } case KNIGHT -> {
-                ChessPosition[] knightPositions = {
-                        new ChessPosition(myRow + 2, myCol + 1), //Up two and right one
-                        new ChessPosition(myRow + 2, myCol - 1), //Up two and left one
-                        new ChessPosition(myRow + 1, myCol + 2), //Up one and right two
-                        new ChessPosition(myRow + 1, myCol - 2), //Up one and left two
-                        new ChessPosition(myRow - 1, myCol + 2), //Down one and right two
-                        new ChessPosition(myRow - 1, myCol - 2), //Down one and left two
-                        new ChessPosition(myRow - 2, myCol + 1), //Down two and right one
-                        new ChessPosition(myRow - 2, myCol - 1)  //Down two and left one
-                };
-                yield findOtherMoves(board, myPosition, knightPositions);
-            } case ROOK -> {
-                int[][] rookDirections = {
-                        {1, 0},  //Up
-                        {-1, 0}, //Down
-                        {0, 1},  //Right
-                        {0, -1}, //Left
-                };
-                yield findDistanceMoves(board, myPosition, rookDirections);
-            } case PAWN -> {
-                Collection<ChessMove> pawnMoves = new ArrayList<>();
-                findPawnMoves(board, myPosition, pawnMoves);
-                yield pawnMoves;
-            }
-        };
-    }
-    public static void findPawnMoves(ChessBoard board, ChessPosition myPosition, Collection<ChessMove> pawnMoves) {
-        int myRow = myPosition.getRow();
-        int myCol = myPosition.getColumn();
-        if (board.getPiece(myPosition).getTeamColor() == ChessGame.TeamColor.BLACK) { // ! Black pawns - move down board
-            ChessPosition BlackPawnOneSquare = new ChessPosition(myRow - 1, myCol); //Standard move
-            ChessPosition BlackPawnTakeLeft = new ChessPosition(myRow - 1, myCol - 1); //Diagonal capture
-            ChessPosition BlackPawnTakeRight = new ChessPosition(myRow - 1, myCol + 1); //Diagonal capture
-            if (myRow != 2) { // * Pawn is not promoting
-                if (board.getPiece(BlackPawnOneSquare) == null) { // * One square
-                    pawnMoves.add(new ChessMove(myPosition, BlackPawnOneSquare, null));
-                    if (myRow == 7) { // * First pawn move
-                        ChessPosition BlackPawnTwoSquares = new ChessPosition(myRow - 2, myCol); // * Two-square move
-                        if (board.getPiece(BlackPawnTwoSquares) == null) { // * Move is available
-                            pawnMoves.add(new ChessMove(myPosition, BlackPawnTwoSquares, null));
-                        }
-                    }
-                } if (myCol > 1) { // ? Capture left
-                    if (board.getPiece(BlackPawnTakeLeft) != null) {
-                        if (board.getPiece(BlackPawnTakeLeft).teamColor == ChessGame.TeamColor.WHITE) {
-                            pawnMoves.add(new ChessMove(myPosition, BlackPawnTakeLeft, null));
-                        }
-                    }
-                } if (myCol < 8) { // ? Capture right
-                    if (board.getPiece(BlackPawnTakeRight) != null) {
-                        if (board.getPiece(BlackPawnTakeRight).teamColor == ChessGame.TeamColor.WHITE) {
-                            pawnMoves.add(new ChessMove(myPosition, BlackPawnTakeRight, null));
-                        }
-                    }
-                }
-            } else { // ~ Pawn is promoting
-                pawnPromote(board, myPosition, pawnMoves, BlackPawnOneSquare, BlackPawnTakeLeft, BlackPawnTakeRight);
-            }
-        } else { // ! White pawns - move up board
-            ChessPosition WhitePawnOneSquare = new ChessPosition(myRow + 1, myCol); //Standard move
-            ChessPosition WhitePawnTakeLeft = new ChessPosition(myRow + 1, myCol - 1); //Diagonal capture
-            ChessPosition WhitePawnTakeRight = new ChessPosition(myRow + 1, myCol + 1); //Diagonal capture
-            if (myRow != 7) { // * Pawn is not promoting
-                if (board.getPiece(WhitePawnOneSquare) == null) { // * One square
-                    pawnMoves.add(new ChessMove(myPosition, WhitePawnOneSquare, null));
-                    if (myRow == 2) { // * First pawn move
-                        ChessPosition WhitePawnTwoSquares = new ChessPosition(myRow + 2, myCol); // * Two-square move
-                        if (board.getPiece(WhitePawnTwoSquares) == null) { // * Move is available
-                            pawnMoves.add(new ChessMove(myPosition, WhitePawnTwoSquares, null));
-                        }
-                    }
-                } if (myCol > 1) { // ? Capture left
-                    if (board.getPiece(WhitePawnTakeLeft) != null) {
-                        if (board.getPiece(WhitePawnTakeLeft).teamColor == ChessGame.TeamColor.BLACK) {
-                            pawnMoves.add(new ChessMove(myPosition, WhitePawnTakeLeft, null));
-                        }
-                    }
-                } if (myCol < 8) { // ? Capture right
-                    if (board.getPiece(WhitePawnTakeRight) != null) {
-                        if (board.getPiece(WhitePawnTakeRight).teamColor == ChessGame.TeamColor.BLACK) {
-                            pawnMoves.add(new ChessMove(myPosition, WhitePawnTakeRight, null));
-                        }
-                    }
-                }
-            } else { // ~ Pawn is promoting
-                pawnPromote(board, myPosition, pawnMoves, WhitePawnOneSquare, WhitePawnTakeLeft, WhitePawnTakeRight);
-            }
-        }
-    }
-
-    public static Collection<ChessMove> addCastlingMoves(ChessBoard board, ChessPosition myPosition, Collection<ChessMove> moves) {
-        int myRow = myPosition.getRow();
-        int myCol = myPosition.getColumn();
-        if (!board.getPiece(myPosition).hasMoved) {
-            if (myCol + 3 <= 8 && board.getPiece(new ChessPosition(myRow, myCol + 1)) == null && //King-side
-                    board.getPiece(new ChessPosition(myRow, myCol + 2)) == null) {
-                ChessPiece kingRook = board.getPiece(new ChessPosition(myRow, myCol + 3));
-                if (kingRook != null && !kingRook.hasMoved) {
-                    moves.add(new ChessMove(myPosition, new ChessPosition(myRow, myCol + 2), null));
-                }
-            } if (myCol - 4 >= 1 && board.getPiece(new ChessPosition(myRow, myCol - 1)) == null && //Queen-side
-                    board.getPiece(new ChessPosition(myRow, myCol - 2)) == null) {
-                ChessPiece queenRook = board.getPiece(new ChessPosition(myRow, myCol - 4));
-                if (queenRook != null && !queenRook.hasMoved) {
-                    moves.add(new ChessMove(myPosition, new ChessPosition(myRow, myCol - 2), null));
-                }
-            }
-        } return moves;
-    }
-    //Find possible pawn promotion moves
-    public static void pawnPromote(ChessBoard board, ChessPosition myPosition, Collection<ChessMove> pawnMoves, ChessPosition PawnOneSquare, ChessPosition PawnTakeLeft, ChessPosition PawnTakeRight) {
-        pawnMoves.add(new ChessMove(myPosition, PawnOneSquare, PieceType.QUEEN));
-        pawnMoves.add(new ChessMove(myPosition, PawnOneSquare, PieceType.KNIGHT));
-        pawnMoves.add(new ChessMove(myPosition, PawnOneSquare, PieceType.ROOK));
-        pawnMoves.add(new ChessMove(myPosition, PawnOneSquare, PieceType.BISHOP));
-        if(myPosition.getColumn() > 1) {
-            pawnPromotionCapture(board, myPosition, pawnMoves, PawnTakeLeft);
-        } if(myPosition.getColumn() < 8) {
-            pawnPromotionCapture(board, myPosition, pawnMoves, PawnTakeRight);
-        }
-    }
-
-    //Helper function for pawnPromote handling pawn promotion captures
-    public static void pawnPromotionCapture(ChessBoard board, ChessPosition myPosition, Collection<ChessMove> pawnMoves, ChessPosition pawnTake) {
-        if (board.getPiece(pawnTake) != null) {
-            if (board.getPiece(pawnTake).teamColor != board.getPiece(myPosition).teamColor) {
-                pawnMoves.add(new ChessMove(myPosition, pawnTake, PieceType.QUEEN));
-                pawnMoves.add(new ChessMove(myPosition, pawnTake, PieceType.KNIGHT));
-                pawnMoves.add(new ChessMove(myPosition, pawnTake, PieceType.ROOK));
-                pawnMoves.add(new ChessMove(myPosition, pawnTake, PieceType.BISHOP));
-            }
-        }
     }
 
     public void setPawnJustDoubleMoved(boolean pawnJustDoubleMoved) {

@@ -1,7 +1,7 @@
 package chess;
 
 import java.util.Collection;
-import java.util.List;
+import java.util.Iterator;
 
 /**
  * For a class that can manage a chess game, making moves on a board
@@ -54,24 +54,19 @@ public class ChessGame {
      */
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
         ChessPiece piece = this.board.getPiece(startPosition);
-        boolean useDistance = false;
         if (piece == null) { //No piece at the position
             return null;
-        } Collection<ChessMove> potentialMoves = piece.pieceMoves(this.board, startPosition);
-        for (ChessMove move : potentialMoves) {
+        } setTeamTurn(piece.getTeamColor());
+        Collection<ChessMove> potentialMoves = piece.pieceMoves(this.board, startPosition);
+        Iterator<ChessMove> iterator = potentialMoves.iterator();
+        while (iterator.hasNext()) {
+            ChessMove move = iterator.next();
             tryMove(move);
-            if (teamTurn == TeamColor.WHITE) {
-                if (staticIsInCheck(whiteKingPosition, this.board)) {
-                    potentialMoves.remove(move);
-                }
-            } else {
-                if (staticIsInCheck(blackKingPosition, this.board)) {
-                    potentialMoves.remove(move);
-                }
+            if ((teamTurn == TeamColor.WHITE && staticIsInCheck(whiteKingPosition, this.board)) |
+                    (teamTurn == TeamColor.BLACK && staticIsInCheck(blackKingPosition, this.board))) {
+                iterator.remove();
             } undoMove(move);
-        } Collection<ChessMove> potentialMoves2 = piece.pieceMoves(this.board, startPosition);
-        potentialMoves.retainAll(potentialMoves2);
-        return potentialMoves;
+        } return potentialMoves;
     }
 
     /**
@@ -84,7 +79,6 @@ public class ChessGame {
         ChessPosition startPosition = move.getStartPosition();
         ChessPosition endPosition = move.getEndPosition();
         ChessPiece piece = this.board.getPiece(startPosition);
-        boolean useDistance = false;
         if (piece == null) {
             throw new InvalidMoveException("No piece at start position");
         }
@@ -132,17 +126,15 @@ public class ChessGame {
                 board.addPiece(rookStart, null);
                 rook.setHasMoved(true);
             }
-        }
-        for (int i = 1; i <= 8; i++) {
+        } for (int i = 1; i <= 8; i++) {
             for (int j = 1; j <= 8; j++) {
-                ChessPosition pos = new ChessPosition(i, j);
-                ChessPiece p = board.getPiece(pos);
-                if (p != null && p.getPieceType() == ChessPiece.PieceType.PAWN) {
-                    p.setPawnJustDoubleMoved(false);
+                ChessPosition pawnPos = new ChessPosition(i, j);
+                ChessPiece pawnPiece = board.getPiece(pawnPos);
+                if (pawnPiece != null && pawnPiece.getPieceType() == ChessPiece.PieceType.PAWN) {
+                    pawnPiece.setPawnJustDoubleMoved(false);
                 }
             }
-        }
-        if (piece.getPieceType() == ChessPiece.PieceType.PAWN) {
+        } if (piece.getPieceType() == ChessPiece.PieceType.PAWN) {
             piece.setPawnJustDoubleMoved(startPosition.getRow() - endPosition.getRow() == 2);
         }
     }
@@ -165,6 +157,8 @@ public class ChessGame {
         if (capturedPiece != null) {
             this.storedCapturedPiece = capturedPiece;
             this.storedCapturedPiecePosition = move.getEndPosition();
+        } else {
+            this.storedCapturedPiece = null;
         } if (move.getPromotionPiece() != null) {
             this.board.addPiece(move.getEndPosition(), new ChessPiece(this.teamTurn, move.getPromotionPiece()));
         } else {
