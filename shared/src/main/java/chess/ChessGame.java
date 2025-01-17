@@ -54,20 +54,17 @@ public class ChessGame {
      * startPosition
      */
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
-        ChessPiece piece = this.board.getPiece(startPosition);
-        if (piece == null) { //No piece at the position
-            return null;
-        } setTeamTurn(piece.getTeamColor());
-        Collection<ChessMove> potentialMoves = piece.pieceMoves(this.board, startPosition);
-        Iterator<ChessMove> iterator = potentialMoves.iterator();
-        while (iterator.hasNext()) {
-            ChessMove move = iterator.next();
+        ChessPiece piece = board.getPiece(startPosition);
+        if (piece == null) return null; //No piece
+        setTeamTurn(piece.getTeamColor());
+        Collection<ChessMove> potentialMoves = piece.pieceMoves(board, startPosition);
+        potentialMoves.removeIf(move -> { //removeIf - previously an iterator - should be more optimized?
             tryMove(move);
-            if ((teamTurn == TeamColor.WHITE && staticIsInCheck(whiteKingPosition, this.board)) |
-                    (teamTurn == TeamColor.BLACK && staticIsInCheck(blackKingPosition, this.board))) {
-                iterator.remove();
-            } undoMove(move);
-        } return potentialMoves;
+            boolean inCheck = (teamTurn == TeamColor.WHITE && staticIsInCheck(whiteKingPosition, board)) ||
+                    (teamTurn == TeamColor.BLACK && staticIsInCheck(blackKingPosition, board));
+            undoMove(move);
+            return inCheck;
+        }); return potentialMoves;
     }
 
     /**
