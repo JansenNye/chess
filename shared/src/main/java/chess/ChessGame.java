@@ -3,6 +3,8 @@ package chess;
 import java.util.Collection;
 import java.util.Iterator;
 
+import static java.lang.Math.abs;
+
 /**
  * For a class that can manage a chess game, making moves on a board
  * <p>
@@ -54,17 +56,36 @@ public class ChessGame {
      * startPosition
      */
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
-        ChessPiece piece = board.getPiece(startPosition);
-        if (piece == null) return null; //No piece
-        setTeamTurn(piece.getTeamColor());
-        Collection<ChessMove> potentialMoves = piece.pieceMoves(board, startPosition);
-        potentialMoves.removeIf(move -> { //removeIf - previously an iterator - should be more optimized?
-            tryMove(move);
-            boolean inCheck = (teamTurn == TeamColor.WHITE && staticIsInCheck(whiteKingPosition, board)) ||
-                    (teamTurn == TeamColor.BLACK && staticIsInCheck(blackKingPosition, board));
-            undoMove(move);
-            return inCheck;
-        }); return potentialMoves;
+//        ChessPiece piece = board.getPiece(startPosition);
+//        if (piece == null) return null; //No piece
+//        setTeamTurn(piece.getTeamColor());
+//        Collection<ChessMove> potentialMoves = piece.pieceMoves(board, startPosition);
+//        potentialMoves.removeIf(move -> { //removeIf - previously an iterator - should be more optimized?
+//            tryMove(move);
+//            boolean inCheck = (teamTurn == TeamColor.WHITE && staticIsInCheck(whiteKingPosition, board)) ||
+//                    (teamTurn == TeamColor.BLACK && staticIsInCheck(blackKingPosition, board));
+//            undoMove(move);
+//            return inCheck;
+//        }); return potentialMoves;
+        ChessPiece piece = this.board.getPiece(startPosition);
+        if (piece == null) { //No piece at the position
+            return null;
+        } setTeamTurn(piece.getTeamColor());
+        Collection<ChessMove> potentialMoves = piece.pieceMoves(this.board, startPosition);
+        Iterator<ChessMove> iterator = potentialMoves.iterator();
+        while (iterator.hasNext()) {
+            ChessMove move = iterator.next();
+            if (piece.getPieceType() == ChessPiece.PieceType.KING && abs(move.getEndPosition().getColumn() - startPosition.getColumn()) == 2) { //Castling
+                if (!castlingValid(move)) iterator.remove();
+            } else {
+                tryMove(move);
+                if ((teamTurn == TeamColor.WHITE && staticIsInCheck(whiteKingPosition, this.board)) |
+                        (teamTurn == TeamColor.BLACK && staticIsInCheck(blackKingPosition, this.board))) {
+                    iterator.remove();
+                }
+                undoMove(move);
+            }
+        } return potentialMoves;
     }
 
     /**
@@ -109,7 +130,7 @@ public class ChessGame {
         this.teamTurn = this.teamTurn == TeamColor.WHITE ? TeamColor.BLACK : TeamColor.WHITE; //Set team turn
         piece.setHasMoved(true); //Mark the piece as having moved
         if (piece.getPieceType() == ChessPiece.PieceType.KING) {
-            if (Math.abs(startPosition.getColumn() - endPosition.getColumn()) == 2) { //Castling
+            if (abs(startPosition.getColumn() - endPosition.getColumn()) == 2) { //Castling
                 ChessPosition intermediatePosition = new ChessPosition(startPosition.getRow(),
                         (startPosition.getColumn() + endPosition.getColumn()) / 2);
                 if (ChessGame.staticIsInCheck(intermediatePosition, board)) {
@@ -189,6 +210,39 @@ public class ChessGame {
         }
     }
 
+    private boolean castlingValid(ChessMove move){
+        ChessPosition startPosition = move.getStartPosition();
+        ChessPosition endPosition = move.getEndPosition();
+        ChessPosition kingFirstSquare = new ChessPosition(startPosition.getRow(), (startPosition.getColumn() + endPosition.getColumn()) / 2);
+        ChessPiece middlePiece = board.getPiece(kingFirstSquare);
+        ChessPiece endPiece = board.getPiece(endPosition);
+        if (middlePiece != null | endPiece != null) {
+            return false;
+        }
+        ChessMove firstKingMove = new ChessMove(startPosition, kingFirstSquare, null); //First of two king moves in castling
+        tryMove(firstKingMove);
+        if (staticIsInCheck(startPosition, board)) {
+            undoMove(firstKingMove);
+            return false;
+        } if (endPosition.getColumn() == 3) { //Queen-side castling
+            ChessPosition thirdPiecePosition = new ChessPosition(endPosition.getRow(), 2);
+            ChessPiece thirdPiece = board.getPiece(thirdPiecePosition);
+            if (thirdPiece != null) {
+                undoMove(firstKingMove);
+                return false;
+            }
+        }
+        ChessMove secondKingMove = new ChessMove(kingFirstSquare, endPosition, null);
+        tryMove(secondKingMove);
+        if (staticIsInCheck(startPosition, board)) {
+            undoMove(secondKingMove);
+            undoMove(firstKingMove);
+            return false;
+        }
+        undoMove(secondKingMove);
+        undoMove(firstKingMove);
+        return true;
+    }
 
     public static boolean staticIsInCheck(ChessPosition kingPosition, ChessBoard board) {
         for (int i = 1; i <= 8; i++) {
