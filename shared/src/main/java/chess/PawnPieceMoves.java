@@ -9,114 +9,81 @@ public class PawnPieceMoves {
     public PawnPieceMoves(ChessPosition myPosition, ChessBoard myBoard) {
         int myRow = myPosition.getRow();
         int myCol = myPosition.getColumn();
-        if (myBoard.getPiece(myPosition).getTeamColor() == ChessGame.TeamColor.BLACK) { // ! Black pawns - move down board
-            ChessPosition BlackPawnOneSquare = new ChessPosition(myRow - 1, myCol); //Standard move
-            ChessPosition BlackPawnTakeLeft = new ChessPosition(myRow - 1, myCol - 1); //Diagonal capture
-            ChessPosition BlackPawnTakeRight = new ChessPosition(myRow - 1, myCol + 1); //Diagonal capture
-            if (myRow != 2) { // * Pawn is not promoting
-                if (myBoard.getPiece(BlackPawnOneSquare) == null) { // * One square
-                    pawnMoves.add(new ChessMove(myPosition, BlackPawnOneSquare, null));
-                    if (myRow == 7) { // * First pawn move
-                        ChessPosition BlackPawnTwoSquares = new ChessPosition(myRow - 2, myCol); // * Two-square move
-                        if (myBoard.getPiece(BlackPawnTwoSquares) == null) { // * Move is available
-                            pawnMoves.add(new ChessMove(myPosition, BlackPawnTwoSquares, null));
-                        }
-                    }
-                } if (myCol > 1) { // ? Capture left
-                    if (myBoard.getPiece(BlackPawnTakeLeft) != null) {
-                        if (myBoard.getPiece(BlackPawnTakeLeft).getTeamColor() == ChessGame.TeamColor.WHITE) {
-                            pawnMoves.add(new ChessMove(myPosition, BlackPawnTakeLeft, null));
-                        }
-                    } ChessPiece enPassantPawn = myBoard.getPiece(new ChessPosition(BlackPawnTakeLeft.getRow() + 1, BlackPawnTakeLeft.getColumn()));
-                    if (enPassantPawn != null) {
-                        if (enPassantPawn.getTeamColor() == ChessGame.TeamColor.WHITE && enPassantPawn.pawnJustDoubleMoved) {
-                            pawnMoves.add(new ChessMove(myPosition, BlackPawnTakeLeft, null));
-                        }
-                    }
-                } if (myCol < 8) { // ? Capture right
-                    if (myBoard.getPiece(BlackPawnTakeRight) != null) {
-                        if (myBoard.getPiece(BlackPawnTakeRight).getTeamColor() == ChessGame.TeamColor.WHITE) {
-                            pawnMoves.add(new ChessMove(myPosition, BlackPawnTakeRight, null));
-                        }
-                    } ChessPiece enPassantPawn = myBoard.getPiece(new ChessPosition(BlackPawnTakeRight.getRow() + 1, BlackPawnTakeRight.getColumn()));
-                    if (enPassantPawn != null) {
-                        if (enPassantPawn.getTeamColor() == ChessGame.TeamColor.WHITE && enPassantPawn.pawnJustDoubleMoved) {
-                            pawnMoves.add(new ChessMove(myPosition, BlackPawnTakeRight, null, true));
-                        }
-                    }
-                }
-            } else { // ~ Pawn is promoting
-                pawnPromote(myBoard, myPosition, pawnMoves, BlackPawnOneSquare, BlackPawnTakeLeft, BlackPawnTakeRight);
-            }
-        } else { // ! White pawns - move up board
-            ChessPosition WhitePawnOneSquare = new ChessPosition(myRow + 1, myCol); //Standard move
-            ChessPosition WhitePawnTakeLeft = new ChessPosition(myRow + 1, myCol - 1); //Diagonal capture
-            ChessPosition WhitePawnTakeRight = new ChessPosition(myRow + 1, myCol + 1); //Diagonal capture
-            if (myRow != 7) { // * Pawn is not promoting
-                if (myBoard.getPiece(WhitePawnOneSquare) == null) { // * One square
-                    pawnMoves.add(new ChessMove(myPosition, WhitePawnOneSquare, null));
-                    if (myRow == 2) { // * First pawn move
-                        ChessPosition WhitePawnTwoSquares = new ChessPosition(myRow + 2, myCol); // * Two-square move
-                        if (myBoard.getPiece(WhitePawnTwoSquares) == null) { // * Move is available
-                            pawnMoves.add(new ChessMove(myPosition, WhitePawnTwoSquares, null));
-                        }
-                    }
-                }
-                if (myCol > 1) { // ? Capture left
-                    if (myBoard.getPiece(WhitePawnTakeLeft) != null) {
-                        if (myBoard.getPiece(WhitePawnTakeLeft).getTeamColor() == ChessGame.TeamColor.BLACK) {
-                            pawnMoves.add(new ChessMove(myPosition, WhitePawnTakeLeft, null));
-                        }
-                    } ChessPiece enPassantPawn = myBoard.getPiece(new ChessPosition(myPosition.getRow(), WhitePawnTakeLeft.getColumn()));
-                    if (enPassantPawn != null) {
-                        if (enPassantPawn.getTeamColor() == ChessGame.TeamColor.BLACK && enPassantPawn.pawnJustDoubleMoved) {
-                            pawnMoves.add(new ChessMove(myPosition, WhitePawnTakeLeft, null, true));
-                        }
-                    }
-                }
-                if (myCol < 8) { // ? Capture right
-                    if (myBoard.getPiece(WhitePawnTakeRight) != null) {
-                        if (myBoard.getPiece(WhitePawnTakeRight).getTeamColor() == ChessGame.TeamColor.BLACK) {
-                            pawnMoves.add(new ChessMove(myPosition, WhitePawnTakeRight, null));
-                        }
-                    } ChessPiece enPassantPawn = myBoard.getPiece(new ChessPosition(myPosition.getRow(), WhitePawnTakeRight.getColumn()));
-                    if (enPassantPawn != null) {
-                        if (enPassantPawn.getTeamColor() == ChessGame.TeamColor.BLACK && enPassantPawn.pawnJustDoubleMoved) {
-                            pawnMoves.add(new ChessMove(myPosition, WhitePawnTakeRight, null, true));
-                        }
-                    }
-                }
-            } else { // ~ Pawn is promoting
-                pawnPromote(myBoard, myPosition, pawnMoves, WhitePawnOneSquare, WhitePawnTakeLeft, WhitePawnTakeRight);
-            }
-        }
-    }
-    public void pawnPromote(ChessBoard board, ChessPosition myPosition, Collection<ChessMove> pawnMoves, ChessPosition PawnOneSquare, ChessPosition PawnTakeLeft, ChessPosition PawnTakeRight) {
-        addAllPromotions(myPosition, pawnMoves, PawnOneSquare);
-        if(myPosition.getColumn() > 1) {
-            pawnPromotionCapture(board, myPosition, pawnMoves, PawnTakeLeft);
-        } if(myPosition.getColumn() < 8) {
-            pawnPromotionCapture(board, myPosition, pawnMoves, PawnTakeRight);
+        ChessGame.TeamColor teamColor = myBoard.getPiece(myPosition).getTeamColor();
+
+        int direction = (teamColor == ChessGame.TeamColor.BLACK) ? -1 : 1;
+        int startRow = (teamColor == ChessGame.TeamColor.BLACK) ? 7 : 2;
+        int promotionRow = (teamColor == ChessGame.TeamColor.BLACK) ? 2 : 7;
+        ChessGame.TeamColor opponentColor = (teamColor == ChessGame.TeamColor.BLACK) ? ChessGame.TeamColor.WHITE : ChessGame.TeamColor.BLACK;
+
+        ChessPosition oneSquareMove = new ChessPosition(myRow + direction, myCol);
+        ChessPosition twoSquareMove = new ChessPosition(myRow + 2 * direction, myCol);
+        ChessPosition leftCapture = new ChessPosition(myRow + direction, myCol - 1);
+        ChessPosition rightCapture = new ChessPosition(myRow + direction, myCol + 1);
+
+        if (myRow != promotionRow) { // Regular moves
+            handlePawnMove(myBoard, myPosition, oneSquareMove, twoSquareMove, startRow);
+            handlePawnCapture(myBoard, myPosition, leftCapture, opponentColor);
+            handlePawnCapture(myBoard, myPosition, rightCapture, opponentColor);
+        } else { // Promotion
+            handlePromotion(myBoard, myPosition, oneSquareMove, leftCapture, rightCapture);
         }
     }
 
-    //Helper function for pawnPromote handling pawn promotion captures
-    public void pawnPromotionCapture(ChessBoard board, ChessPosition myPosition, Collection<ChessMove> pawnMoves, ChessPosition pawnTake) {
-        if (board.getPiece(pawnTake) != null) {
-            if (board.getPiece(pawnTake).getTeamColor() != board.getPiece(myPosition).getTeamColor()) {
-                addAllPromotions(myPosition, pawnMoves, pawnTake);
+    private void handlePawnMove(ChessBoard board, ChessPosition myPosition, ChessPosition oneSquareMove, ChessPosition twoSquareMove, int startRow) {
+        if (board.getPiece(oneSquareMove) == null) {
+            pawnMoves.add(new ChessMove(myPosition, oneSquareMove, null));
+            if (myPosition.getRow() == startRow && board.getPiece(twoSquareMove) == null) {
+                pawnMoves.add(new ChessMove(myPosition, twoSquareMove, null));
             }
         }
     }
 
-    private void addAllPromotions(ChessPosition myPosition, Collection<ChessMove> pawnMoves, ChessPosition pawnTake) {
-        pawnMoves.add(new ChessMove(myPosition, pawnTake, ChessPiece.PieceType.QUEEN));
-        pawnMoves.add(new ChessMove(myPosition, pawnTake, ChessPiece.PieceType.KNIGHT));
-        pawnMoves.add(new ChessMove(myPosition, pawnTake, ChessPiece.PieceType.ROOK));
-        pawnMoves.add(new ChessMove(myPosition, pawnTake, ChessPiece.PieceType.BISHOP));
+    private void handlePawnCapture(ChessBoard board, ChessPosition myPosition, ChessPosition capturePosition, ChessGame.TeamColor opponentColor) {
+        if (capturePosition.getColumn() >= 1 && capturePosition.getColumn() <= 8) {
+            ChessPiece targetPiece = board.getPiece(capturePosition);
+            if (targetPiece != null && targetPiece.getTeamColor() == opponentColor) {
+                pawnMoves.add(new ChessMove(myPosition, capturePosition, null));
+            } else if (isEnPassantCapture(board, myPosition, capturePosition, opponentColor)) {
+                pawnMoves.add(new ChessMove(myPosition, capturePosition, null, true));
+            }
+        }
+    }
+
+    private boolean isEnPassantCapture(ChessBoard board, ChessPosition myPosition, ChessPosition capturePosition, ChessGame.TeamColor opponentColor) {
+        ChessPosition adjacentPawnPos = new ChessPosition(myPosition.getRow(), capturePosition.getColumn());
+        ChessPiece adjacentPawn = board.getPiece(adjacentPawnPos);
+        return adjacentPawn != null && adjacentPawn.getTeamColor() == opponentColor && adjacentPawn.pawnJustDoubleMoved;
+    }
+
+    private void handlePromotion(ChessBoard board, ChessPosition myPosition, ChessPosition oneSquareMove, ChessPosition leftCapture, ChessPosition rightCapture) {
+        if (board.getPiece(oneSquareMove) == null) {
+            addAllPromotions(myPosition, oneSquareMove);
+        }
+        if (leftCapture.getColumn() >= 1) {
+            handlePromotionCapture(board, myPosition, leftCapture);
+        }
+        if (rightCapture.getColumn() <= 8) {
+            handlePromotionCapture(board, myPosition, rightCapture);
+        }
+    }
+
+    private void handlePromotionCapture(ChessBoard board, ChessPosition myPosition, ChessPosition capturePosition) {
+        ChessPiece targetPiece = board.getPiece(capturePosition);
+        if (targetPiece != null && targetPiece.getTeamColor() != board.getPiece(myPosition).getTeamColor()) {
+            addAllPromotions(myPosition, capturePosition);
+        }
+    }
+
+    private void addAllPromotions(ChessPosition myPosition, ChessPosition targetPosition) {
+        pawnMoves.add(new ChessMove(myPosition, targetPosition, ChessPiece.PieceType.QUEEN));
+        pawnMoves.add(new ChessMove(myPosition, targetPosition, ChessPiece.PieceType.KNIGHT));
+        pawnMoves.add(new ChessMove(myPosition, targetPosition, ChessPiece.PieceType.ROOK));
+        pawnMoves.add(new ChessMove(myPosition, targetPosition, ChessPiece.PieceType.BISHOP));
     }
 
     public Collection<ChessMove> getPawnMoves() {
         return this.pawnMoves;
     }
 }
+

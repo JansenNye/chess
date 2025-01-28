@@ -54,17 +54,6 @@ public class ChessGame {
      * startPosition
      */
     public Collection<ChessMove> validMoves(ChessPosition startPosition) {
-//        ChessPiece piece = board.getPiece(startPosition);
-//        if (piece == null) return null; //No piece
-//        setTeamTurn(piece.getTeamColor());
-//        Collection<ChessMove> potentialMoves = piece.pieceMoves(board, startPosition);
-//        potentialMoves.removeIf(move -> { //removeIf - previously an iterator - should be more optimized?
-//            tryMove(move);
-//            boolean inCheck = (teamTurn == TeamColor.WHITE && staticIsInCheck(whiteKingPosition, board)) ||
-//                    (teamTurn == TeamColor.BLACK && staticIsInCheck(blackKingPosition, board));
-//            undoMove(move);
-//            return inCheck;
-//        }); return potentialMoves;
         ChessPiece piece = this.board.getPiece(startPosition);
         if (piece == null) { //No piece at the position
             return null;
