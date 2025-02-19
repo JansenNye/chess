@@ -1,0 +1,26 @@
+<component name="libraryTable">
+  <library name="sparkjava.spark.core" type="repository">
+    <properties maven-id="com.sparkjava:spark-core:2.9.3" />
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/server/spark-core-2.9.3.jar!/" />
+      <root url="jar://$PROJECT_DIR$/server/slf4j-api-1.7.25.jar!/" />
+      <root url="jar://$PROJECT_DIR$/server/jetty-server-9.4.31.v20200723.jar!/" />
+      <root url="jar://$PROJECT_DIR$/server/javax.servlet-api-3.1.0.jar!/" />
+      <root url="jar://$PROJECT_DIR$/server/jetty-http-9.4.31.v20200723.jar!/" />
+      <root url="jar://$PROJECT_DIR$/server/jetty-util-9.4.31.v20200723.jar!/" />
+      <root url="jar://$PROJECT_DIR$/server/jetty-io-9.4.31.v20200723.jar!/" />
+      <root url="jar://$PROJECT_DIR$/server/jetty-webapp-9.4.31.v20200723.jar!/" />
+      <root url="jar://$PROJECT_DIR$/server/jetty-xml-9.4.31.v20200723.jar!/" />
+      <root url="jar://$PROJECT_DIR$/server/jetty-servlet-9.4.31.v20200723.jar!/" />
+      <root url="jar://$PROJECT_DIR$/server/jetty-security-9.4.31.v20200723.jar!/" />
+      <root url="jar://$PROJECT_DIR$/server/websocket-server-9.4.31.v20200723.jar!/" />
+      <root url="jar://$PROJECT_DIR$/server/websocket-common-9.4.31.v20200723.jar!/" />
+      <root url="jar://$PROJECT_DIR$/server/websocket-client-9.4.31.v20200723.jar!/" />
+      <root url="jar://$PROJECT_DIR$/server/jetty-client-9.4.31.v20200723.jar!/" />
+      <root url="jar://$PROJECT_DIR$/server/websocket-servlet-9.4.31.v20200723.jar!/" />
+      <root url="jar://$PROJECT_DIR$/server/websocket-api-9.4.31.v20200723.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
