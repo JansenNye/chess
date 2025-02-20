@@ -3,8 +3,10 @@ import dataaccess.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import service.requests.LoginRequest;
+import service.requests.LogoutRequest;
 import service.requests.RegisterRequest;
 import service.results.LoginResult;
+import service.results.LogoutResult;
 import service.results.RegisterResult;
 import model.UserData;
 import model.AuthData;
@@ -124,6 +126,48 @@ public class UserServiceTest {
         });
         assertThrows(DataAccessException.class, () -> {
             userService.login(badRequest2);
+        });
+    }
+
+    @Test
+    void testLogout_Success() throws DataAccessException {
+        // Register/login first to get valid token
+        RegisterResult regResult = userService.register(new RegisterRequest("alice", "secret", "a@b.com"));
+        assertNotNull(regResult.authToken());
+
+        // Ensure token is recognized by the DAO
+        AuthData authData = authDAO.getAuth(regResult.authToken());
+        assertNotNull(authData);
+
+        // Log out
+        LogoutRequest logoutReq = new LogoutRequest(regResult.authToken());
+        LogoutResult logoutResult = userService.logout(logoutReq);
+
+        // Check result
+        assertNotNull(logoutResult);
+
+        // Verify the token no longer exists
+        AuthData authAfterLogout = authDAO.getAuth(regResult.authToken());
+        assertNull(authAfterLogout, "Token should be removed after logout");
+    }
+
+    @Test
+    void testLogout_InvalidToken() throws DataAccessException {
+        // Attempt to log out w random/bogus token
+        LogoutRequest request = new LogoutRequest("this_token_does_not_exist");
+
+        // Expect exception
+        assertThrows(DataAccessException.class, () -> {
+            userService.logout(request);
+        });
+    }
+
+    @Test
+    void testLogout_MissingToken() {
+        // Attempt to log out w blank or null
+        LogoutRequest badRequest = new LogoutRequest("");
+        assertThrows(DataAccessException.class, () -> {
+            userService.logout(badRequest);
         });
     }
 }

@@ -1,8 +1,10 @@
 package service;
 import dataaccess.AuthDAO;
 import service.requests.LoginRequest;
+import service.requests.LogoutRequest;
 import service.requests.RegisterRequest;
 import service.results.LoginResult;
+import service.results.LogoutResult;
 import service.results.RegisterResult;
 import dataaccess.DataAccessException;
 import dataaccess.UserDAO;
@@ -75,6 +77,28 @@ public class UserService {
         authDAO.createAuth(authData);
 
         return new LoginResult(user.username(), token);
+    }
+
+    /**
+     * Logs out the user w/ this authToken
+     */
+    public LogoutResult logout(LogoutRequest request) throws DataAccessException {
+        // Validate input
+        if (request.authToken() == null || request.authToken().isBlank()) {
+            throw new DataAccessException("Invalid logout request: authToken is missing");
+        }
+
+        // Look up token in authDAO
+        AuthData authData = authDAO.getAuth(request.authToken());
+        if (authData == null) {
+            // Typically you'd return a 401 or something similar.
+            // We'll throw an exception here for simplicity
+            throw new DataAccessException("Invalid or non-existent auth token");
+        }
+
+        // Delete token, return success
+        authDAO.deleteAuth(request.authToken());
+        return new LogoutResult();
     }
 }
 
