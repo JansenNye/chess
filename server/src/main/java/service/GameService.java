@@ -6,8 +6,10 @@ import dataaccess.GameDAO;
 import model.AuthData;
 import model.GameData;
 import service.requests.CreateGameRequest;
+import service.requests.JoinGameRequest;
 import service.requests.ListGamesRequest;
 import service.results.CreateGameResult;
+import service.results.JoinGameResult;
 import service.results.ListGamesResult;
 import java.util.ArrayList;
 import java.util.List;
@@ -93,5 +95,70 @@ public class GameService {
         gameDAO.createGame(newGame);
 
         return new CreateGameResult(newID);
+    }
+
+    /**
+     * Joins the specified game as either WHITE or BLACK, if available.
+     */
+    public JoinGameResult joinGame(JoinGameRequest request) throws DataAccessException {
+        // Validate request
+        if (request.authToken() == null || request.authToken().isBlank()) {
+            throw new DataAccessException("No auth token provided");
+        }
+        if (request.gameID() <= 0) {
+            throw new DataAccessException("Invalid game ID");
+        }
+        if (!"WHITE".equalsIgnoreCase(request.playerColor()) &&
+                !"BLACK".equalsIgnoreCase(request.playerColor())) {
+            throw new DataAccessException("Invalid player color (must be WHITE or BLACK)");
+        }
+
+        // Check auth token
+        AuthData authData = authDAO.getAuth(request.authToken());
+        if (authData == null) {
+            throw new DataAccessException("Unauthorized: invalid authToken");
+        }
+
+        // Fetch the game
+        GameData game = gameDAO.getGame(request.gameID());
+        if (game == null) {
+            throw new DataAccessException("Game not found with ID: " + request.gameID());
+        }
+
+        // Check availability for requested color
+        String username = authData.username();
+        if (request.playerColor().equalsIgnoreCase("WHITE")) {
+            if (game.whiteUsername() == null) {
+                game = new GameData(
+                        game.gameID(),
+                        username,
+                        game.blackUsername(),
+                        game.gameName(),
+                        game.game()
+                );
+            } else if (game.whiteUsername().equals(username)) {
+                // throw error?
+            } else {
+                throw new DataAccessException("White slot already taken");
+            }
+        } else { // BLACK
+            if (game.blackUsername() == null) {
+                game = new GameData(
+                        game.gameID(),
+                        game.whiteUsername(),
+                        username,
+                        game.gameName(),
+                        game.game()
+                );
+            } else if (game.blackUsername().equals(username)) {
+                // throw error?
+            } else {
+                throw new DataAccessException("Black slot already taken");
+            }
+        }
+
+        gameDAO.updateGame(game);
+
+        return new JoinGameResult();
     }
 }
