@@ -27,14 +27,14 @@ public class CreateGameHandler implements Route {
     @Override
     public Object handle(Request request, Response response) {
         try {
-            // Grab the auth token from the header
+            // Grab auth token from header
             String authToken = request.headers("authorization");
             if (authToken == null || authToken.isBlank()) {
                 response.status(401);
                 return gson.toJson(new ErrorMessage("Error: unauthorized"));
             }
 
-            // Parse request body for the gameName
+            // Parse request body for gameName
             BodyJSON body = gson.fromJson(request.body(), BodyJSON.class);
             if (body == null || body.gameName == null || body.gameName.isBlank()) {
                 response.status(400);
@@ -44,16 +44,15 @@ public class CreateGameHandler implements Route {
             // Create service-layer request
             CreateGameRequest createReq = new CreateGameRequest(authToken, body.gameName);
 
-            // Call the service
+            // Call service
             CreateGameResult result = gameService.createGame(createReq);
 
-            // On success, return 200 + JSON with gameID
+            // On success return 200 + JSON with gameID
             response.status(200);
             return gson.toJson(result);
 
         } catch (DataAccessException e) {
             String msg = e.getMessage() == null ? "" : e.getMessage().toLowerCase();
-
             if (msg.contains("unauthorized") || msg.contains("invalid token")) {
                 response.status(401);
                 return gson.toJson(new ErrorMessage("Error: unauthorized"));
@@ -69,11 +68,14 @@ public class CreateGameHandler implements Route {
             response.status(500);
             return gson.toJson(new ErrorMessage("Error: " + e.getMessage()));
         }
-    } /**
+    }
+
+    /**
      * Helper record for parsing incoming JSON body
-     * The user only supplies "gameName" in the body
      */
     private record BodyJSON(String gameName) {}
+
+    // Empty
     private record ErrorMessage(String message) {}
 }
 

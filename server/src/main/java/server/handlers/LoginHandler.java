@@ -33,6 +33,7 @@ public class LoginHandler implements Route {
 
             // Return 200 ,+ JSON result
             response.status(200);
+
             return gson.toJson(result);
 
         } catch (DataAccessException e) {
@@ -42,12 +43,10 @@ public class LoginHandler implements Route {
             if (msg.contains("unauthorized") || msg.contains("incorrect password") || msg.contains("not exist")) {
                 response.status(401);
                 return gson.toJson(new ErrorMessage("Error: unauthorized"));
-            }
-            else if (msg.contains("bad request") || msg.contains("invalid")) {
+            } else if (msg.contains("bad request") || msg.contains("invalid")) {
                 response.status(400);
                 return gson.toJson(new ErrorMessage("Error: bad request"));
-            }
-            else {
+            } else {
                 response.status(500);
                 return gson.toJson(new ErrorMessage("Error: " + e.getMessage()));
             }
@@ -55,5 +54,7 @@ public class LoginHandler implements Route {
             response.status(500);
             return gson.toJson(new ErrorMessage("Error: " + e.getMessage()));
         }
-    } private record ErrorMessage(String message) {}
+    }
+    // Empty
+    private record ErrorMessage(String message) {}
 }

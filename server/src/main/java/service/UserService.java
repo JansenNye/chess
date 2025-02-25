@@ -1,4 +1,5 @@
 package service;
+
 import dataaccess.AuthDAO;
 import service.requests.LoginRequest;
 import service.requests.LogoutRequest;
@@ -91,8 +92,6 @@ public class UserService {
         // Look up token in authDAO
         AuthData authData = authDAO.getAuth(request.authToken());
         if (authData == null) {
-            // Typically you'd return a 401 or something similar.
-            // We'll throw an exception here for simplicity
             throw new DataAccessException("Invalid or non-existent auth token");
         }
 
@@ -101,4 +100,5 @@ public class UserService {
         return new LogoutResult();
     }
 }
+
 

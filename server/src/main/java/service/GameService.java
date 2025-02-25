@@ -38,7 +38,6 @@ public class GameService {
         // Check if authToken is valid
         AuthData authData = authDAO.getAuth(request.authToken());
         if (authData == null) {
-            // Maps to HTTP 401 Unauthorized?
             throw new DataAccessException("Unauthorized: invalid or expired authToken");
         }
 
@@ -57,6 +56,7 @@ public class GameService {
                     )
             );
         }
+
         // Return result
         return new ListGamesResult(gameInfos);
     }
@@ -68,8 +68,7 @@ public class GameService {
         // Validate request
         if (request.authToken() == null || request.authToken().isBlank()) {
             throw new DataAccessException("Missing auth token");
-        }
-        if (request.gameName() == null || request.gameName().isBlank()) {
+        } if (request.gameName() == null || request.gameName().isBlank()) {
             throw new DataAccessException("Missing or invalid gameName");
         }
 
@@ -91,9 +90,10 @@ public class GameService {
                 null           //ChessGame object?
         );
 
-        // Insert into the DAO
+        // Insert into DAO
         gameDAO.createGame(newGame);
 
+        // Return game result
         return new CreateGameResult(newID);
     }
 
@@ -104,11 +104,9 @@ public class GameService {
         // Validate request
         if (request.authToken() == null || request.authToken().isBlank()) {
             throw new DataAccessException("No auth token provided");
-        }
-        if (request.gameID() <= 0) {
+        } if (request.gameID() <= 0) {
             throw new DataAccessException("Invalid game ID");
-        }
-        if (!"WHITE".equalsIgnoreCase(request.playerColor()) &&
+        } if (!"WHITE".equalsIgnoreCase(request.playerColor()) &&
                 !"BLACK".equalsIgnoreCase(request.playerColor())) {
             throw new DataAccessException("Invalid player color (must be WHITE or BLACK)");
         }
@@ -119,7 +117,7 @@ public class GameService {
             throw new DataAccessException("Unauthorized: invalid authToken");
         }
 
-        // Fetch the game
+        // Fetch game
         GameData game = gameDAO.getGame(request.gameID());
         if (game == null) {
             throw new DataAccessException("Game not found with ID: " + request.gameID());
@@ -136,6 +134,7 @@ public class GameService {
                         game.gameName(),
                         game.game()
                 );
+                // REMOVE
             } else if (game.whiteUsername().equals(username)) {
                 // throw error?
             } else {
@@ -150,12 +149,14 @@ public class GameService {
                         game.gameName(),
                         game.game()
                 );
+                //REMOVE
             } else if (game.blackUsername().equals(username)) {
                 // throw error?
             } else {
                 throw new DataAccessException("Black slot already taken");
             }
         }
+
 
         gameDAO.updateGame(game);
 

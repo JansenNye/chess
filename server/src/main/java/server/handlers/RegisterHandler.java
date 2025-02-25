@@ -38,7 +38,6 @@ public class RegisterHandler implements Route {
             // 403 - already taken
             // otherwise 500
             String error = e.getMessage() != null ? e.getMessage().toLowerCase() : "";
-
             if (error.contains("invalid") || error.contains("bad request")) {
                 response.status(400);
                 return gson.toJson(new ErrorMessage("Error: bad request"));
@@ -54,6 +53,8 @@ public class RegisterHandler implements Route {
             response.status(500);
             return gson.toJson(new ErrorMessage("Error: " + e.getMessage()));
         }
-    } private record ErrorMessage(String message) {}
+    }
+    // Empty
+    private record ErrorMessage(String message) {}
 }
 

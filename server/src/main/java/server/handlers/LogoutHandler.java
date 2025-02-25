@@ -33,19 +33,18 @@ public class LogoutHandler implements Route {
                 return gson.toJson(new ErrorMessage("Error: unauthorized"));
             }
 
-            // Create a LogoutRequest
+            // Create logoutRequest
             LogoutRequest logoutReq = new LogoutRequest(token);
 
-            // Call the service
+            // Call service
             LogoutResult result = userService.logout(logoutReq);
 
-            // On success, return 200 + empty JSON object
+            // On success return 200 + empty JSON object
             response.status(200);
             return gson.toJson(new EmptyJson());
 
         } catch (DataAccessException e) {
             String msg = e.getMessage() == null ? "" : e.getMessage().toLowerCase();
-
             if (msg.contains("unauthorized") || msg.contains("invalid")) {
                 response.status(401);
                 return gson.toJson(new ErrorMessage("Error: unauthorized"));
@@ -58,7 +57,11 @@ public class LogoutHandler implements Route {
             response.status(500);
             return gson.toJson(new ErrorMessage("Error: " + e.getMessage()));
         }
-    } private record EmptyJson() {}
+    }
+    // Empty
+    private record EmptyJson() {}
+
+    // EMpty
     private record ErrorMessage(String message) {}
 }
 

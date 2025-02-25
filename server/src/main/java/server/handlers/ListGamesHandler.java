@@ -1,4 +1,5 @@
 package server.handlers;
+
 import com.google.gson.Gson;
 import dataaccess.DataAccessException;
 import service.GameService;
@@ -42,7 +43,6 @@ public class ListGamesHandler implements Route {
 
         } catch (DataAccessException e) {
             String msg = e.getMessage() == null ? "" : e.getMessage().toLowerCase();
-
             if (msg.contains("unauthorized") || msg.contains("invalid")) {
                 response.status(401);
                 return gson.toJson(new ErrorMessage("Error: unauthorized"));
@@ -55,5 +55,6 @@ public class ListGamesHandler implements Route {
             response.status(500);
             return gson.toJson(new ErrorMessage("Error: " + e.getMessage()));
         }
-    }  private record ErrorMessage(String message) {}
+    } // Empty
+    private record ErrorMessage(String message) {}
 }

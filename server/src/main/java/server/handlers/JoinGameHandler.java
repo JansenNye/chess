@@ -38,12 +38,10 @@ public class JoinGameHandler implements Route {
             if (body == null) {
                 response.status(400);
                 return gson.toJson(new ErrorMessage("Error: bad request (empty or invalid JSON)"));
-            }
-            if (body.playerColor == null || body.playerColor.isBlank()) {
+            } if (body.playerColor == null || body.playerColor.isBlank()) {
                 response.status(400);
                 return gson.toJson(new ErrorMessage("Error: bad request (missing playerColor)"));
-            }
-            if (body.gameID <= 0) {
+            } if (body.gameID <= 0) {
                 response.status(400);
                 return gson.toJson(new ErrorMessage("Error: bad request (invalid gameID)"));
             }
@@ -60,20 +58,16 @@ public class JoinGameHandler implements Route {
 
         } catch (DataAccessException e) {
             String msg = (e.getMessage() == null) ? "" : e.getMessage().toLowerCase();
-
             if (msg.contains("unauthorized") || msg.contains("invalid token")) {
                 response.status(401);
                 return gson.toJson(new ErrorMessage("Error: unauthorized"));
-            }
-            else if (msg.contains("bad request") || msg.contains("invalid player color") || msg.contains("game not found")) {
+            } else if (msg.contains("bad request") || msg.contains("invalid player color") || msg.contains("game not found")) {
                 response.status(400);
                 return gson.toJson(new ErrorMessage("Error: bad request"));
-            }
-            else if (msg.contains("already taken")) {
+            } else if (msg.contains("already taken")) {
                 response.status(403);
                 return gson.toJson(new ErrorMessage("Error: already taken"));
-            }
-            else {
+            } else {
                 response.status(500);
                 return gson.toJson(new ErrorMessage("Error: " + e.getMessage()));
             }
@@ -88,7 +82,10 @@ public class JoinGameHandler implements Route {
      */
     private record BodyJSON(String playerColor, int gameID) {}
 
+    // Empty
     private record EmptyJson() {}
+
+    // Empty
     private record ErrorMessage(String message) {}
 }
 

@@ -1,4 +1,5 @@
 package service;
+
 import dataaccess.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -13,6 +14,7 @@ import model.AuthData;
 import static org.junit.jupiter.api.Assertions.*;
 
 public class UserServiceTest {
+
     private UserDAO userDAO;
     private AuthDAO authDAO;
     private UserService userService;
@@ -26,34 +28,33 @@ public class UserServiceTest {
 
     @Test
     void testRegister_Success() throws DataAccessException {
-        // Start with an empty DB (MemoryUserDAO is empty initially)
-        // Make a request
-        RegisterRequest request = new RegisterRequest("alice", "secret", "alice@example.com");
+        // Start with an empty DB (MemoryUserDAO is empty initially), make a request
+        RegisterRequest request = new RegisterRequest("aliceusername", "alicepassword", "alicetest@gmail.com");
 
         // Call service
         RegisterResult result = userService.register(request);
 
         // Check result
         assertNotNull(result);
-        assertEquals("alice", result.username());
+        assertEquals("aliceusername", result.username());
         assertNotNull(result.authToken());  // Should be a non-empty UUID
 
         // Check DAOs to confirm
-        UserData userInDB = userDAO.getUser("alice");
+        UserData userInDB = userDAO.getUser("aliceusername");
         assertNotNull(userInDB);
-        assertEquals("secret", userInDB.password());
-        assertEquals("alice@example.com", userInDB.email());
+        assertEquals("alicepassword", userInDB.password());
+        assertEquals("alicetest@gmail.com", userInDB.email());
         AuthData authInDB = authDAO.getAuth(result.authToken());
         assertNotNull(authInDB);
-        assertEquals("alice", authInDB.username());
+        assertEquals("aliceusername", authInDB.username());
     }
 
     @Test
     void testRegister_UserAlreadyTaken() throws DataAccessException {
         // Pre-insert user
-        userDAO.createUser(new UserData("bob", "123", "bob@example.com"));
+        userDAO.createUser(new UserData("jamesusername", "jamespassword1", "jamesemail@gmail.com"));
 
-        RegisterRequest request = new RegisterRequest("bob", "pass", "bob@domain.com");
+        RegisterRequest request = new RegisterRequest("jamesusername", "jamespassword", "jamesemail@hotmail.com");
 
         // Expect an exception if we try to re-register same user
         assertThrows(DataAccessException.class, () -> {
@@ -64,7 +65,7 @@ public class UserServiceTest {
     @Test
     void testRegister_InvalidInput() {
         // Try with blank username
-        RegisterRequest badRequest = new RegisterRequest("", "secret", "email@x.com");
+        RegisterRequest badRequest = new RegisterRequest("", "blank", "email@mail.com");
         assertThrows(DataAccessException.class, () -> {
             userService.register(badRequest);
         });
@@ -72,30 +73,30 @@ public class UserServiceTest {
 
     @Test
     void testLogin_Success() throws DataAccessException {
-        // First, register user so they exist in the DAO
-        RegisterRequest registerRequest = new RegisterRequest("alice", "secret", "alice@example.com");
+        // Register user so they exist in the DAO
+        RegisterRequest registerRequest = new RegisterRequest("amy", "amypass2", "amy@provider.com");
         RegisterResult registerResult = userService.register(registerRequest);
-        assertNotNull(registerResult.authToken());  // user is created, so we have a token
+        assertNotNull(registerResult.authToken());
 
         // Attempt to log in w/ correct credentials
-        LoginRequest loginRequest = new LoginRequest("alice", "secret");
+        LoginRequest loginRequest = new LoginRequest("amy", "amypass2");
         LoginResult loginResult = userService.login(loginRequest);
 
         // Verify login result
         assertNotNull(loginResult);
-        assertEquals("alice", loginResult.username());
+        assertEquals("amy", loginResult.username());
         assertNotNull(loginResult.authToken());
 
         // Check that new auth token was really created in the DAO
         AuthData authData = authDAO.getAuth(loginResult.authToken());
         assertNotNull(authData);
-        assertEquals("alice", authData.username());
+        assertEquals("amy", authData.username());
     }
 
     @Test
     void testLogin_NoSuchUser() throws DataAccessException {
         // Attempt to log in with nonexistent user
-        LoginRequest loginRequest = new LoginRequest("bob", "secret");
+        LoginRequest loginRequest = new LoginRequest("rob", "123123123");
         assertThrows(DataAccessException.class, () -> {
             userService.login(loginRequest);
         });
@@ -104,11 +105,11 @@ public class UserServiceTest {
     @Test
     void testLogin_BadPassword() throws DataAccessException {
         // Register a user
-        RegisterRequest registerRequest = new RegisterRequest("charlie", "password", "charlie@example.com");
+        RegisterRequest registerRequest = new RegisterRequest("devin_", "password", "devindevin@example.com");
         userService.register(registerRequest);
 
         // Try to log in with wrong password
-        LoginRequest badPasswordReq = new LoginRequest("charlie", "wrongPassword");
+        LoginRequest badPasswordReq = new LoginRequest("devin_", "wrongPassword");
         assertThrows(DataAccessException.class, () -> {
             userService.login(badPasswordReq);
         });
@@ -117,7 +118,7 @@ public class UserServiceTest {
     @Test
     void testLogin_MissingFields() {
         // Missing username
-        LoginRequest badRequest1 = new LoginRequest(null, "secret");
+        LoginRequest badRequest1 = new LoginRequest(null, "testtest");
         // Missing password
         LoginRequest badRequest2 = new LoginRequest("dave", "");
 
@@ -132,7 +133,7 @@ public class UserServiceTest {
     @Test
     void testLogout_Success() throws DataAccessException {
         // Register/login first to get valid token
-        RegisterResult regResult = userService.register(new RegisterRequest("alice", "secret", "a@b.com"));
+        RegisterResult regResult = userService.register(new RegisterRequest("john", "johnjohn", "a@b.com"));
         assertNotNull(regResult.authToken());
 
         // Ensure token is recognized by the DAO
