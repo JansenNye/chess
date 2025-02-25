@@ -39,15 +39,23 @@ public class ClearServiceTest {
         assertNull(authDAO.getAuth("tok123"));
     }
 
+    // For negative case of clear
+    private static class ThrowingMemoryUserDAO extends MemoryUserDAO {
+        @Override
+        public void clear() throws DataAccessException {
+            throw new DataAccessException("Simulated DAO failure during clear()");
+        }
+    }
+    
     @Test
     void testClear_ThrowsException() {
-        // 1) Make a special userDAO that always fails on clear()
-        UserDAO throwingUserDAO = new MemoryUserDAO();
+        // Make special userDAO that always fails on clear()
+        UserDAO throwingUserDAO = new ThrowingMemoryUserDAO();
         ClearService badClearService = new ClearService(throwingUserDAO, gameDAO, authDAO);
 
-        // 2) Expect an exception
-        assertThrows(DataAccessException.class, () -> {
-            badClearService.clear();
-        });
+        // Expect exception
+
+        // lambda
+        assertThrows(DataAccessException.class, badClearService::clear);
     }
 }

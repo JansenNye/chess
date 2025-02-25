@@ -39,10 +39,8 @@ public class GameServiceTest {
         gameDAO.createGame(game1);
         gameDAO.createGame(game2);
 
-        // Make request
+        // Make request, call service, check result
         ListGamesRequest request = new ListGamesRequest("valid_token");
-
-        // Call service, check result
         ListGamesResult result = gameService.listGames(request);
         assertNotNull(result);
         assertNotNull(result.games());
@@ -61,14 +59,13 @@ public class GameServiceTest {
         // Insert valid token for someone else, request will pass "bogus_token"
         AuthData goodToken = new AuthData("real_token", "someone");
         authDAO.createAuth(goodToken);
-
         ListGamesRequest badReq = new ListGamesRequest("bogus_token");
         assertThrows(DataAccessException.class, () -> gameService.listGames(badReq));
     }
 
     @Test
     void testListGames_MissingToken() {
-        // Null or empty token  -  should fail
+        // Null/empty token
         ListGamesRequest missing = new ListGamesRequest("");
         assertThrows(DataAccessException.class, () -> gameService.listGames(missing));
     }
@@ -116,9 +113,9 @@ public class GameServiceTest {
         authDAO.createAuth(new AuthData("token456", "bob"));
         gameDAO.createGame(new GameData(2002, null, null, "AnotherGame", null));
 
+        // Join game
         JoinGameRequest request = new JoinGameRequest("token456", "BLACK", 2002);
         gameService.joinGame(request);
-
         GameData updated = gameDAO.getGame(2002);
         assertNull(updated.whiteUsername());
         assertEquals("bob", updated.blackUsername());
@@ -129,17 +126,19 @@ public class GameServiceTest {
         // No tokens in DAO - invalid
         gameDAO.createGame(new GameData(3003, null, null, "GameNoAuth", null));
 
+        // Try to join game
         JoinGameRequest req = new JoinGameRequest("bogus", "WHITE", 3003);
-        assertThrows(DataAccessException.class, () -> { gameService.joinGame(req); });
+        assertThrows(DataAccessException.class, () -> gameService.joinGame(req));
     }
 
     @Test
     void testJoinGame_GameNotFound() throws DataAccessException {
+        // Create auth
         authDAO.createAuth(new AuthData("token789", "charlie"));
 
         // No game with ID=9999
         JoinGameRequest req = new JoinGameRequest("token789", "WHITE", 9999);
-        assertThrows(DataAccessException.class, () -> { gameService.joinGame(req); });
+        assertThrows(DataAccessException.class, () -> gameService.joinGame(req));
     }
 
     @Test
@@ -150,9 +149,7 @@ public class GameServiceTest {
 
         // Now dave tries to join as WHITE - not available
         JoinGameRequest req = new JoinGameRequest("tokenD", "WHITE", 4004);
-        assertThrows(DataAccessException.class, () -> {
-            gameService.joinGame(req);
-        });
+        assertThrows(DataAccessException.class, () -> gameService.joinGame(req));
     }
 
     @Test
@@ -162,7 +159,6 @@ public class GameServiceTest {
         gameDAO.createGame(new GameData(5005, null, "eve", "BlackSlotFull", null));
 
         JoinGameRequest req = new JoinGameRequest("tokenE", "BLACK", 5005);
-
         assertDoesNotThrow(() -> gameService.joinGame(req));
 
         // Check that blackUsername remains "eve"
@@ -181,11 +177,11 @@ public class GameServiceTest {
         // Call createGame
         CreateGameResult result = gameService.createGame(request);
 
-        // Check that the result is valid
+        // Check that result is valid
         assertNotNull(result, "Should not be null on success");
         assertTrue(result.gameID() > 0, "GameID should be > 0");
 
-        // Confirm the game is in the DAO
+        // Confirm game is in the DAO
         GameData storedGame = gameDAO.getGame(result.gameID());
         assertNotNull(storedGame, "Game should be stored with the returned ID");
         assertEquals("MyCoolGame", storedGame.gameName());
@@ -198,7 +194,7 @@ public class GameServiceTest {
         CreateGameRequest request = new CreateGameRequest("bogus_token", "SomeGame");
 
         // Expect a DataAccessException for invalid authToken
-        assertThrows(DataAccessException.class, () -> { gameService.createGame(request); });
+        assertThrows(DataAccessException.class, () -> gameService.createGame(request));
     }
 
     @Test
@@ -209,26 +205,6 @@ public class GameServiceTest {
 
         CreateGameRequest request = new CreateGameRequest("valid_token", "");
 
-        assertThrows(DataAccessException.class, () -> { gameService.createGame(request); });
+        assertThrows(DataAccessException.class, () -> gameService.createGame(request));
     }
-
-    // For negative case of clear
-    private static class ThrowingMemoryUserDAO extends MemoryUserDAO {
-        @Override
-        public void clear() throws DataAccessException {
-            throw new DataAccessException("Simulated DAO failure during clear()");
-        }
-    }
-
-    @Test
-    void testClear_ThrowsException() {
-        UserDAO throwingUserDAO = new ThrowingMemoryUserDAO();
-        GameDAO normalGameDAO = new MemoryGameDAO();
-        AuthDAO normalAuthDAO = new MemoryAuthDAO();
-
-        ClearService testClearService = new ClearService(throwingUserDAO, normalGameDAO, normalAuthDAO);
-
-        assertThrows(DataAccessException.class, testClearService::clear);
-    }
-
 }

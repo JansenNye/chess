@@ -41,10 +41,8 @@ public class GameService {
             throw new DataAccessException("Unauthorized: invalid or expired authToken");
         }
 
-        // Fetch all games from GameDAO
+        // Fetch all games from GameDAO, convert to the minimal output form (GameInfo)
         List<GameData> allGames = gameDAO.listGames();
-
-        // Convert into the minimal output form (GameInfo)
         List<ListGamesResult.GameInfo> gameInfos = new ArrayList<>();
         for (GameData g : allGames) {
             gameInfos.add(
@@ -55,9 +53,7 @@ public class GameService {
                             g.gameName()
                     )
             );
-        }
-
-        // Return result
+        } // Return result
         return new ListGamesResult(gameInfos);
     }
 
@@ -87,7 +83,7 @@ public class GameService {
                 null,
                 null,
                 request.gameName(),
-                null           //ChessGame object?
+                null            //ChessGame object?
         );
 
         // Insert into DAO
@@ -134,9 +130,9 @@ public class GameService {
                         game.gameName(),
                         game.game()
                 );
-                // REMOVE
+                // REMOVE?
             } else if (game.whiteUsername().equals(username)) {
-                // throw error?
+
             } else {
                 throw new DataAccessException("White slot already taken");
             }
@@ -149,14 +145,13 @@ public class GameService {
                         game.gameName(),
                         game.game()
                 );
-                //REMOVE
+                // REMOVE?
             } else if (game.blackUsername().equals(username)) {
                 // throw error?
             } else {
                 throw new DataAccessException("Black slot already taken");
             }
         }
-
 
         gameDAO.updateGame(game);
 

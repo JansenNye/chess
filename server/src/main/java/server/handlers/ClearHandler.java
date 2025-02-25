@@ -31,7 +31,9 @@ public class ClearHandler implements Route {
         }
     }
 
+    // Empty
     private record EmptyJson() {}
 
+    // Empty
     private record ErrorMessage(String message) {}
 }
