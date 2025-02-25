@@ -38,4 +38,16 @@ public class ClearServiceTest {
         assertNull(gameDAO.getGame(1));
         assertNull(authDAO.getAuth("tok123"));
     }
+
+    @Test
+    void testClear_ThrowsException() {
+        // 1) Make a special userDAO that always fails on clear()
+        UserDAO throwingUserDAO = new MemoryUserDAO();
+        ClearService badClearService = new ClearService(throwingUserDAO, gameDAO, authDAO);
+
+        // 2) Expect an exception
+        assertThrows(DataAccessException.class, () -> {
+            badClearService.clear();
+        });
+    }
 }

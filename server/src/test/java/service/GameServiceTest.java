@@ -5,8 +5,10 @@ import model.AuthData;
 import model.GameData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import service.requests.CreateGameRequest;
 import service.requests.JoinGameRequest;
 import service.requests.ListGamesRequest;
+import service.results.CreateGameResult;
 import service.results.JoinGameResult;
 import service.results.ListGamesResult;
 
@@ -177,6 +179,57 @@ public class GameServiceTest {
         // Check that blackUsername remains "eve"
         GameData updated = gameDAO.getGame(5005);
         assertEquals("eve", updated.blackUsername());
+    }
+    @Test
+    void testCreateGame_Success() throws DataAccessException {
+        // 1) Insert a valid token into authDAO
+        AuthData validAuth = new AuthData("good_token", "alice");
+        authDAO.createAuth(validAuth);
+
+        // 2) Build a request with a valid token and gameName
+        CreateGameRequest request = new CreateGameRequest("good_token", "MyCoolGame");
+
+        // 3) Call createGame
+        CreateGameResult result = gameService.createGame(request);
+
+        // 4) Check that the result is valid
+        assertNotNull(result, "Should not be null on success");
+        assertTrue(result.gameID() > 0, "GameID should be > 0");
+
+        // 5) Confirm the game is in the DAO
+        GameData storedGame = gameDAO.getGame(result.gameID());
+        assertNotNull(storedGame, "Game should be stored with the returned ID");
+        assertEquals("MyCoolGame", storedGame.gameName());
+        assertNull(storedGame.whiteUsername());
+        assertNull(storedGame.blackUsername());
+    }
+
+    @Test
+    void testCreateGame_InvalidToken() {
+        // 1) No tokens in DAO => "bogus_token" is invalid
+
+        // 2) Build the request
+        CreateGameRequest request = new CreateGameRequest("bogus_token", "SomeGame");
+
+        // 3) Expect a DataAccessException for invalid authToken
+        assertThrows(DataAccessException.class, () -> {
+            gameService.createGame(request);
+        });
+    }
+
+    @Test
+    void testCreateGame_MissingGameName() throws DataAccessException {
+        // 1) Insert a valid token
+        AuthData validAuth = new AuthData("valid_token", "bob");
+        authDAO.createAuth(validAuth);
+
+        // 2) Provide an empty game name
+        CreateGameRequest request = new CreateGameRequest("valid_token", "");
+
+        // 3) Expect a DataAccessException for "Missing or invalid gameName"
+        assertThrows(DataAccessException.class, () -> {
+            gameService.createGame(request);
+        });
     }
 
 }
