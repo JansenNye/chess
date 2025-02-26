@@ -9,6 +9,8 @@ import spark.Request;
 import spark.Response;
 import spark.Route;
 
+import static server.handlers.ListGamesHandler.jsonConvert;
+
 /**
  * Handles [DELETE] /session
  * Headers: authorization: <authToken>
@@ -44,15 +46,7 @@ public class LogoutHandler implements Route {
             return gson.toJson(new EmptyJson());
 
         } catch (DataAccessException e) {
-            String msg = e.getMessage() == null ? "" : e.getMessage().toLowerCase();
-            if (msg.contains("unauthorized") || msg.contains("invalid")) {
-                response.status(401);
-                return gson.toJson(new ErrorMessage("Error: unauthorized"));
-            } else {
-                response.status(500);
-                return gson.toJson(new ErrorMessage("Error: " + e.getMessage()));
-            }
-
+            return jsonConvert(e, response);
         } catch (Exception e) {
             response.status(500);
             return gson.toJson(new ErrorMessage("Error: " + e.getMessage()));

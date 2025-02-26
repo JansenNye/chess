@@ -192,14 +192,12 @@ public class ChessGame {
             for (int j = 1; j <= 8; j++) {
                 ChessPosition position = new ChessPosition(i, j);
                 ChessPiece piece = this.board.getPiece(position);
-                if (piece != null) {
-                    if (piece.getPieceType() == ChessPiece.PieceType.KING && piece.getTeamColor() == teamColor) {
-                        if (teamColor == TeamColor.WHITE) {
-                            whiteKingPosition = position;
-                        } else {
-                            blackKingPosition = position;
-                        } break;
-                    }
+                if (piece != null && (piece.getPieceType() == ChessPiece.PieceType.KING && piece.getTeamColor() == teamColor)) {
+                    if (teamColor == TeamColor.WHITE) {
+                        whiteKingPosition = position;
+                    } else {
+                        blackKingPosition = position;
+                    } break;
                 }
             }
         }
@@ -274,14 +272,18 @@ public class ChessGame {
                 } Collection<ChessMove> pieceMoves = piece.pieceMoves(board, position);
                 for (ChessMove move : pieceMoves) {
                     if (teamColor == TeamColor.WHITE) {
-                        if (move.getEndPosition().equals(whiteKingPosition) && piece.getTeamColor() != TeamColor.WHITE) {
-                            return true;
+                        if (!move.getEndPosition().equals(whiteKingPosition)) {
+                            continue;
+                        } if (piece.getTeamColor() == TeamColor.WHITE) {
+                            continue;
                         }
                     } else {
-                        if (move.getEndPosition().equals(blackKingPosition) && piece.getTeamColor() != TeamColor.BLACK) {
-                            return true;
+                        if (!move.getEndPosition().equals(blackKingPosition)) {
+                            continue;
+                        } if (piece.getTeamColor() == TeamColor.BLACK) {
+                            continue;
                         }
-                    }
+                    } return true;
                 }
             }
         } return false;
