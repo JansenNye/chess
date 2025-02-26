@@ -248,7 +248,8 @@ public class ChessGame {
                     continue;
                 } Collection<ChessMove> pieceMoves = piece.pieceMoves(board, position);
                 for (ChessMove move : pieceMoves) {
-                    if (move.getEndPosition().equals(kingPosition) && piece.getTeamColor() != board.getPiece(move.getEndPosition()).getTeamColor()) {
+                    if (move.getEndPosition().equals(kingPosition) && piece.getTeamColor()
+                            != board.getPiece(move.getEndPosition()).getTeamColor()) {
                         return true;
                     }
                 }
@@ -309,7 +310,12 @@ public class ChessGame {
             return false;
         } for (ChessMove move : kingMoves) {
             tryMove(move);
-            if (!staticIsInCheck(kingPosition, this.board)) {
+            getKingPosition(teamColor);
+            if (teamColor == TeamColor.WHITE) {
+                kingPosition = whiteKingPosition;
+            } else {
+                kingPosition = blackKingPosition;
+            } if (!staticIsInCheck(kingPosition, this.board)) {
                 inCheckmate = false;
                 undoMove(move);
                 break;
@@ -326,7 +332,12 @@ public class ChessGame {
                     Collection<ChessMove> pieceMoves = piece.pieceMoves(board, position);
                     for (ChessMove move : pieceMoves) {
                         tryMove(move);
-                        if (!staticIsInCheck(kingPosition, this.board)) {
+                        getKingPosition(teamColor);
+                        if (teamColor == TeamColor.WHITE) {
+                            kingPosition = whiteKingPosition;
+                        } else {
+                            kingPosition = blackKingPosition;
+                        } if (!staticIsInCheck(kingPosition, this.board)) {
                             inCheckmate = false;
                         } undoMove(move);
                     }
