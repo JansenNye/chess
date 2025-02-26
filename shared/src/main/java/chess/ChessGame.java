@@ -319,21 +319,18 @@ public class ChessGame {
             for (int j = 1; j <= 8; j++) {
                 ChessPosition position = new ChessPosition(i, j);
                 ChessPiece piece = board.getPiece(position);
-                if (piece == null) {
+                if (piece == null || piece.getTeamColor() != teamColor) {
                     continue;
-                } if (piece.getTeamColor() == teamColor) {
-                    Collection<ChessMove> pieceMoves = piece.pieceMoves(board, position);
-                    for (ChessMove move : pieceMoves) {
-                        tryMove(move);
-                        getKingPosition(teamColor);
-                        if (teamColor == TeamColor.WHITE) {
-                            kingPosition = whiteKingPosition;
-                        } else {
-                            kingPosition = blackKingPosition;
-                        } if (!staticIsInCheck(kingPosition, this.board)) {
-                            inCheckmate = false;
-                        } undoMove(move);
-                    }
+                } Collection<ChessMove> pieceMoves = piece.pieceMoves(board, position);
+                for (ChessMove move : pieceMoves) {
+                    tryMove(move);
+                    getKingPosition(teamColor);
+                    kingPosition = (teamColor == TeamColor.WHITE)
+                            ? whiteKingPosition
+                            : blackKingPosition;
+                    if (!staticIsInCheck(kingPosition, board)) {
+                        inCheckmate = false;
+                    } undoMove(move);
                 }
             }
         } return inCheckmate;
