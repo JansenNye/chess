@@ -6,7 +6,7 @@ import static chess.ChessPiece.findDistanceMoves;
 
 public class QueenPieceMoves {
 
-    private final Collection<ChessMove> QueenMoves;
+    private final Collection<ChessMove> queenMoves;
 
     public QueenPieceMoves(ChessPosition myPosition, ChessBoard myBoard) {
         int[][] queenDirections = {
@@ -19,10 +19,10 @@ public class QueenPieceMoves {
                 {-1, 0},  // Down
                 {-1, -1}, // Down and left
         };
-        this.QueenMoves = findDistanceMoves(myBoard, myPosition, queenDirections);
+        this.queenMoves = findDistanceMoves(myBoard, myPosition, queenDirections);
     }
 
     public Collection<ChessMove> getQueenMoves() {
-        return this.QueenMoves;
+        return this.queenMoves;
     }
 }

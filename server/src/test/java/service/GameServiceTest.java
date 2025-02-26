@@ -64,14 +64,14 @@ public class GameServiceTest {
     }
 
     @Test
-    void testListGames_MissingToken() {
+    void testListGamesMissingToken() {
         // Null/empty token
         ListGamesRequest missing = new ListGamesRequest("");
         assertThrows(DataAccessException.class, () -> gameService.listGames(missing));
     }
 
     @Test
-    void testListGames_EmptyList() throws DataAccessException {
+    void testListGamesEmptyList() throws DataAccessException {
         // Valid token, no games in DAO
         authDAO.createAuth(new AuthData("valid_token", "bob"));
 
@@ -85,7 +85,7 @@ public class GameServiceTest {
     }
 
     @Test
-    void testJoinGame_WhiteSuccess() throws DataAccessException {
+    void testJoinGameWhiteSuccess() throws DataAccessException {
         // Valid auth
         AuthData auth = new AuthData("tokentoken", "bigal");
         authDAO.createAuth(auth);
@@ -108,7 +108,7 @@ public class GameServiceTest {
     }
 
     @Test
-    void testJoinGame_BlackSuccess() throws DataAccessException {
+    void testJoinGameBlackSuccess() throws DataAccessException {
         // Similar but fill blackUsername
         authDAO.createAuth(new AuthData("token_1", "bobert"));
         gameDAO.createGame(new GameData(2002, null, null, "AnotherGame", null));

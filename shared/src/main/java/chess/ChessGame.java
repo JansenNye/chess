@@ -293,75 +293,47 @@ public class ChessGame {
      */
     public boolean isInCheckmate(TeamColor teamColor) {
         getKingPosition(teamColor);
-        boolean inCheckmate = true;
-        ChessPiece king;
-        Collection<ChessMove> kingMoves;
+        ChessPosition kingPosition;
         if (teamColor == TeamColor.WHITE) {
-            king = board.getPiece(whiteKingPosition);
-            kingMoves = king.pieceMoves(board, whiteKingPosition);
-            if (!staticIsInCheck(whiteKingPosition, this.board)) {
-                return false;
-            } for (ChessMove move : kingMoves) {
-                tryMove(move);
-                if (!staticIsInCheck(whiteKingPosition, this.board)) {
-                    inCheckmate = false;
-                    undoMove(move);
-                    break;
-                } else {
-                    undoMove(move);
-                }
-            } for (int i = 1; i <=8; i++) {
-                for (int j = 1; j <= 8; j++) {
-                    ChessPosition position = new ChessPosition(i, j);
-                    ChessPiece piece = board.getPiece(position);
-                    if (piece == null) {
-                        continue;
-                    } if (piece.getTeamColor() == teamColor) {
-                        Collection<ChessMove> pieceMoves = piece.pieceMoves(board, position);
-                        for (ChessMove move : pieceMoves) {
-                            tryMove(move);
-                            if (!staticIsInCheck(whiteKingPosition, this.board)) {
-                                inCheckmate = false;
-                            } undoMove(move);
-                        }
-                    }
-                }
-            }
+            kingPosition = whiteKingPosition;
         } else {
-            king = board.getPiece(blackKingPosition);
-            kingMoves = king.pieceMoves(board, blackKingPosition);
-            if (!staticIsInCheck(blackKingPosition, this.board)) {
-                return false;
-            } for (ChessMove move : kingMoves) {
-                tryMove(move);
-                if (!staticIsInCheck(blackKingPosition, this.board)) {
-                    inCheckmate = false;
-                    undoMove(move);
-                    break;
-                } else {
-                    undoMove(move);
-                }
-            } for (int i = 1; i <=8; i++) {
-                for (int j = 1; j <= 8; j++) {
-                    ChessPosition position = new ChessPosition(i, j);
-                    ChessPiece piece = board.getPiece(position);
-                    if (piece == null) {
-                        continue;
-                    } if (piece.getTeamColor() == teamColor) {
-                        Collection<ChessMove> pieceMoves = piece.pieceMoves(board, position);
-                        for (ChessMove move : pieceMoves) {
-                            tryMove(move);
-                            if (!staticIsInCheck(blackKingPosition, this.board)) {
-                                inCheckmate = false;
-                            }
-                            undoMove(move);
-                        }
+            kingPosition = blackKingPosition;
+        } return returnCheckmate(kingPosition, teamColor);
+    }
+
+    public boolean returnCheckmate(ChessPosition kingPosition, TeamColor teamColor) {
+        ChessPiece king = board.getPiece(kingPosition);
+        boolean inCheckmate = true;
+        Collection<ChessMove> kingMoves = king.pieceMoves(board, kingPosition);
+        if (!staticIsInCheck(kingPosition, this.board)) {
+            return false;
+        } for (ChessMove move : kingMoves) {
+            tryMove(move);
+            if (!staticIsInCheck(kingPosition, this.board)) {
+                inCheckmate = false;
+                undoMove(move);
+                break;
+            } else {
+                undoMove(move);
+            }
+        } for (int i = 1; i <= 8; i++) {
+            for (int j = 1; j <= 8; j++) {
+                ChessPosition position = new ChessPosition(i, j);
+                ChessPiece piece = board.getPiece(position);
+                if (piece == null) {
+                    continue;
+                } if (piece.getTeamColor() == teamColor) {
+                    Collection<ChessMove> pieceMoves = piece.pieceMoves(board, position);
+                    for (ChessMove move : pieceMoves) {
+                        tryMove(move);
+                        if (!staticIsInCheck(kingPosition, this.board)) {
+                            inCheckmate = false;
+                        } undoMove(move);
                     }
                 }
             }
         } return inCheckmate;
     }
-
     /**
      * Determines if the given team is in stalemate, which here is defined as having
      * no valid moves

@@ -6,7 +6,7 @@ import static chess.ChessPiece.findDistanceMoves;
 
 public class BishopPieceMoves {
 
-    private final Collection<ChessMove> BishopMoves;
+    private final Collection<ChessMove> bishopMoves;
 
     public BishopPieceMoves(ChessPosition myPosition, ChessBoard myBoard) {
         int[][] bishopDirections = {
@@ -15,10 +15,10 @@ public class BishopPieceMoves {
                 {-1, 1},  // Down and right
                 {-1, -1}, // Down and left
         };
-        this.BishopMoves = findDistanceMoves(myBoard, myPosition, bishopDirections);
+        this.bishopMoves = findDistanceMoves(myBoard, myPosition, bishopDirections);
     }
 
     public Collection<ChessMove> getBishopMoves() {
-        return this.BishopMoves;
+        return this.bishopMoves;
     }
 }

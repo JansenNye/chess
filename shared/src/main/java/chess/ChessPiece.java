@@ -120,17 +120,17 @@ public class ChessPiece {
                 QueenPieceMoves myQueenMoves = new QueenPieceMoves(myPosition, board);
                 yield myQueenMoves.getQueenMoves();
             } case BISHOP -> {
-                BishopPieceMoves BishopMoves = new BishopPieceMoves(myPosition, board);
-                yield BishopMoves.getBishopMoves();
+                BishopPieceMoves bishopMoves = new BishopPieceMoves(myPosition, board);
+                yield bishopMoves.getBishopMoves();
             } case KNIGHT -> {
-                KnightPieceMoves KnightMoves = new KnightPieceMoves(myPosition, board);
-                yield KnightMoves.getKnightMoves();
+                KnightPieceMoves knightMoves = new KnightPieceMoves(myPosition, board);
+                yield knightMoves.getKnightMoves();
             } case ROOK -> {
-                RookPieceMoves RookMoves = new RookPieceMoves(myPosition, board);
-                yield RookMoves.getRookMoves();
+                RookPieceMoves rookMoves = new RookPieceMoves(myPosition, board);
+                yield rookMoves.getRookMoves();
             } case PAWN -> {
-                PawnPieceMoves PawnMoves = new PawnPieceMoves(myPosition, board);
-                yield PawnMoves.getPawnMoves();
+                PawnPieceMoves pawnMoves = new PawnPieceMoves(myPosition, board);
+                yield pawnMoves.getPawnMoves();
             }
         };
     }
