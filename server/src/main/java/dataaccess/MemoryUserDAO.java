@@ -28,19 +28,4 @@ public class MemoryUserDAO implements UserDAO {
             return null;
         } return users.get(username);
     }
-
-    @Override
-    public void updateUser(UserData user) throws DataAccessException {
-        if (user == null) {
-            throw new DataAccessException("User cannot be null");
-        } String username = user.username();
-        if (!users.containsKey(username)) {
-            throw new DataAccessException("User not found: " + username);
-        } users.put(username, user);
-    }
-
-    @Override
-    public void deleteUser(String username) throws DataAccessException {
-        users.remove(username);
-    }
 }
