@@ -17,7 +17,7 @@ import spark.Route;
 public class ListGamesHandler implements Route {
 
     private final GameService gameService;
-    private static final Gson gson = new Gson();
+    private static final Gson Gson = new Gson();
 
     public ListGamesHandler(GameService gameService) {
         this.gameService = gameService;
@@ -30,7 +30,7 @@ public class ListGamesHandler implements Route {
             String authToken = request.headers("authorization");
             if (authToken == null || authToken.isBlank()) {
                 response.status(401);
-                return gson.toJson(new ErrorMessage("Error: unauthorized"));
+                return Gson.toJson(new ErrorMessage("Error: unauthorized"));
             }
 
             // Build ListGamesRequest &  call service
@@ -39,14 +39,14 @@ public class ListGamesHandler implements Route {
 
             // Return 200 + JSON
             response.status(200);
-            return gson.toJson(result);
+            return Gson.toJson(result);
 
         } catch (DataAccessException e) {
             return jsonConvert(e, response);
 
         } catch (Exception e) {
             response.status(500);
-            return gson.toJson(new ErrorMessage("Error: " + e.getMessage()));
+            return Gson.toJson(new ErrorMessage("Error: " + e.getMessage()));
         }
     } // Empty
 
@@ -54,10 +54,10 @@ public class ListGamesHandler implements Route {
         String msg = e.getMessage() == null ? "" : e.getMessage().toLowerCase();
         if (msg.contains("unauthorized") || msg.contains("invalid")) {
             response.status(401);
-            return gson.toJson(new ErrorMessage("Error: unauthorized"));
+            return Gson.toJson(new ErrorMessage("Error: unauthorized"));
         } else {
             response.status(500);
-            return gson.toJson(new ErrorMessage("Error: " + e.getMessage()));
+            return Gson.toJson(new ErrorMessage("Error: " + e.getMessage()));
         }
     }
 

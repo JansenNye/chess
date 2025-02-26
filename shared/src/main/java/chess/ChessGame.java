@@ -270,20 +270,11 @@ public class ChessGame {
                 if (piece == null) {
                     continue;
                 } Collection<ChessMove> pieceMoves = piece.pieceMoves(board, position);
+                ChessPosition targetKingPosition = (teamColor == TeamColor.WHITE) ? whiteKingPosition : blackKingPosition;
                 for (ChessMove move : pieceMoves) {
-                    if (teamColor == TeamColor.WHITE) {
-                        if (!move.getEndPosition().equals(whiteKingPosition)) {
-                            continue;
-                        } if (piece.getTeamColor() == TeamColor.WHITE) {
-                            continue;
-                        }
-                    } else {
-                        if (!move.getEndPosition().equals(blackKingPosition)) {
-                            continue;
-                        } if (piece.getTeamColor() == TeamColor.BLACK) {
-                            continue;
-                        }
-                    } return true;
+                    if (move.getEndPosition().equals(targetKingPosition) && piece.getTeamColor() != teamColor) {
+                        return true;
+                    }
                 }
             }
         } return false;
