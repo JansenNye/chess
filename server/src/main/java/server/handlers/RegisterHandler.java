@@ -23,10 +23,8 @@ public class RegisterHandler implements Route {
     @Override
     public Object handle(Request request, Response response) {
         try {
-            // Parse JSON body into RegisterRequest
+            // Parse JSON body into RegisterRequest, call service
             RegisterRequest registerReq = gson.fromJson(request.body(), RegisterRequest.class);
-
-            // Call service
             RegisterResult result = userService.register(registerReq);
 
             // On success, return 200 + JSON result
@@ -48,12 +46,12 @@ public class RegisterHandler implements Route {
                 response.status(500);
                 return gson.toJson(new ErrorMessage("Error: " + e.getMessage()));
             }
-
         } catch (Exception e) {
             response.status(500);
             return gson.toJson(new ErrorMessage("Error: " + e.getMessage()));
         }
     }
+
     // Empty
     private record ErrorMessage(String message) {}
 }

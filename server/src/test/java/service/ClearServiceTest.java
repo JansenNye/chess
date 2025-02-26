@@ -46,7 +46,7 @@ public class ClearServiceTest {
             throw new DataAccessException("Simulated DAO failure during clear()");
         }
     }
-    
+
     @Test
     void testClear_ThrowsException() {
         // Make special userDAO that always fails on clear()
@@ -54,7 +54,6 @@ public class ClearServiceTest {
         ClearService badClearService = new ClearService(throwingUserDAO, gameDAO, authDAO);
 
         // Expect exception
-
         // lambda
         assertThrows(DataAccessException.class, badClearService::clear);
     }

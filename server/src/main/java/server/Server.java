@@ -33,7 +33,7 @@ public class Server {
         var createGameHandler = new CreateGameHandler(gameService);
         var joinGameHandler = new JoinGameHandler(gameService);
 
-        // Endpoints/ routes
+        // Endpoints/routes
         Spark.delete("/db", clearHandler);
         Spark.post("/user", registerHandler);
         Spark.post("/session", loginHandler);

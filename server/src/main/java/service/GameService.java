@@ -83,13 +83,11 @@ public class GameService {
                 null,
                 null,
                 request.gameName(),
-                null            //ChessGame object?
+                null
         );
 
-        // Insert into DAO
+        // Insert into DAO, return result
         gameDAO.createGame(newGame);
-
-        // Return game result
         return new CreateGameResult(newID);
     }
 
@@ -130,9 +128,8 @@ public class GameService {
                         game.gameName(),
                         game.game()
                 );
-                // REMOVE?
             } else if (game.whiteUsername().equals(username)) {
-
+                // Empty
             } else {
                 throw new DataAccessException("White slot already taken");
             }
@@ -145,7 +142,6 @@ public class GameService {
                         game.gameName(),
                         game.game()
                 );
-                // REMOVE?
             } else if (game.blackUsername().equals(username)) {
                 // throw error?
             } else {
