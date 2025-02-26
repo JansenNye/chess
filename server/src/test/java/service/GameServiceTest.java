@@ -28,7 +28,7 @@ public class GameServiceTest {
     }
 
     @Test
-    void testListGames_Success() throws DataAccessException {
+    void testListGamesSuccess() throws DataAccessException {
         // Create valid auth token
         AuthData goodToken = new AuthData("valid_token", "alice");
         authDAO.createAuth(goodToken);
@@ -55,7 +55,7 @@ public class GameServiceTest {
     }
 
     @Test
-    void testListGames_InvalidToken() throws DataAccessException {
+    void testListGamesInvalidToken() throws DataAccessException {
         // Insert valid token for someone else, request will pass "bogus_token"
         AuthData goodToken = new AuthData("realtoken", "someone");
         authDAO.createAuth(goodToken);
@@ -122,7 +122,7 @@ public class GameServiceTest {
     }
 
     @Test
-    void testJoinGame_InvalidToken() throws DataAccessException {
+    void testJoinGameInvalidToken() throws DataAccessException {
         // No tokens in DAO - invalid
         gameDAO.createGame(new GameData(3003, null, null, "GameNoAuth", null));
 
@@ -132,7 +132,7 @@ public class GameServiceTest {
     }
 
     @Test
-    void testJoinGame_GameNotFound() throws DataAccessException {
+    void testJoinGameGameNotFound() throws DataAccessException {
         // Create auth
         authDAO.createAuth(new AuthData("token789", "charlie"));
 
@@ -142,7 +142,7 @@ public class GameServiceTest {
     }
 
     @Test
-    void testJoinGame_ColorAlreadyTaken() throws DataAccessException {
+    void testJoinGameColorAlreadyTaken() throws DataAccessException {
         authDAO.createAuth(new AuthData("tokenD", "dave"));
         // Pre-insert game - already has Eve as white
         gameDAO.createGame(new GameData(4004, "eve", null, "FullWhiteSlot", null));
@@ -153,7 +153,7 @@ public class GameServiceTest {
     }
 
     @Test
-    void testJoinGame_AlreadyJoined() throws DataAccessException {
+    void testJoinGameAlreadyJoined() throws DataAccessException {
         // Eve already in black slot
         authDAO.createAuth(new AuthData("tokenE", "eve"));
         gameDAO.createGame(new GameData(5005, null, "eve", "BlackSlotFull", null));
@@ -166,7 +166,7 @@ public class GameServiceTest {
         assertEquals("eve", updated.blackUsername());
     }
     @Test
-    void testCreateGame_Success() throws DataAccessException {
+    void testCreateGameSuccess() throws DataAccessException {
         // Insert valid token to authDAO
         AuthData validAuth = new AuthData("good_token", "alice");
         authDAO.createAuth(validAuth);
@@ -188,7 +188,7 @@ public class GameServiceTest {
     }
 
     @Test
-    void testCreateGame_InvalidToken() {
+    void testCreateGameInvalidToken() {
         CreateGameRequest request = new CreateGameRequest("bogus_token", "SomeGame");
 
         // Expect DataAccessException for invalid authToken
@@ -196,7 +196,7 @@ public class GameServiceTest {
     }
 
     @Test
-    void testCreateGame_MissingGameName() throws DataAccessException {
+    void testCreateGameMissingGameName() throws DataAccessException {
         // Insert valid token
         AuthData validAuth = new AuthData("valid_token", "bob");
         authDAO.createAuth(validAuth);

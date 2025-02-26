@@ -62,8 +62,9 @@ public class ChessGame {
         Iterator<ChessMove> iterator = potentialMoves.iterator();
         while (iterator.hasNext()) {
             ChessMove move = iterator.next();
-            if (piece.getPieceType() == ChessPiece.PieceType.KING && abs(move.getEndPosition().getColumn() - startPosition.getColumn()) == 2) { //Castling
-                if (!castlingValid(move)) iterator.remove();
+            if (piece.getPieceType() == ChessPiece.PieceType.KING &&
+                    abs(move.getEndPosition().getColumn() - startPosition.getColumn()) == 2) { //Castling
+                if (!castlingValid(move)) { iterator.remove(); }
             } else {
                 tryMove(move);
                 if ((piece.getTeamColor() == TeamColor.WHITE && staticIsInCheck(whiteKingPosition, this.board)) |
@@ -162,7 +163,8 @@ public class ChessGame {
         // Check for en passant first
         ChessPosition enPassantPosition = new ChessPosition(move.getStartPosition().getRow(), move.getEndPosition().getColumn());
         ChessPiece enPassantPawn = board.getPiece(enPassantPosition);
-        if (move.getIsEnPassant() | (enPassantPawn != null && enPassantPawn.getPieceType() == ChessPiece.PieceType.PAWN && enPassantPawn.pawnJustDoubleMoved)) {
+        if (move.getIsEnPassant() | (enPassantPawn != null && enPassantPawn.getPieceType() == ChessPiece.PieceType.PAWN
+                && enPassantPawn.pawnJustDoubleMoved)) {
             this.storedCapturedPiece = this.board.getPiece(enPassantPosition);
             this.board.addPiece(enPassantPosition, null);
             this.board.addPiece(move.getEndPosition(), this.storedMovedPiece);

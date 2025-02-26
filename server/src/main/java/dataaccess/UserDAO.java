@@ -17,15 +17,5 @@ public interface UserDAO {
      * Retrieve a user by username
      */
     UserData getUser(String username) throws DataAccessException;
-
-    /**
-     * Update user’s data
-     */
-    void updateUser(UserData user) throws DataAccessException;
-
-    /**
-     * Removes a user (optional, if your design needs it).
-     */
-    void deleteUser(String username) throws DataAccessException;
 }
 

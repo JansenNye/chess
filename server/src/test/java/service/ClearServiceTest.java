@@ -48,7 +48,7 @@ public class ClearServiceTest {
     }
 
     @Test
-    void testClear_ThrowsException() {
+    void testClearThrowsException() {
         // Make special userDAO that always fails on clear()
         UserDAO throwingUserDAO = new ThrowingMemoryUserDAO();
         ClearService badClearService = new ClearService(throwingUserDAO, gameDAO, authDAO);

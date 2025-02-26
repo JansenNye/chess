@@ -56,7 +56,8 @@ public class PawnPieceMoves {
         return adjacentPawn != null && adjacentPawn.getTeamColor() == opponentColor && adjacentPawn.pawnJustDoubleMoved;
     }
 
-    private void handlePromotion(ChessBoard board, ChessPosition myPosition, ChessPosition oneSquareMove, ChessPosition leftCapture, ChessPosition rightCapture) {
+    private void handlePromotion(ChessBoard board, ChessPosition myPosition, ChessPosition oneSquareMove,
+                                 ChessPosition leftCapture, ChessPosition rightCapture) {
         if (board.getPiece(oneSquareMove) == null) {
             addAllPromotions(myPosition, oneSquareMove);
         }

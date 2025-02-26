@@ -27,7 +27,7 @@ public class UserServiceTest {
     }
 
     @Test
-    void testRegister_Success() throws DataAccessException {
+    void testRegisterSuccess() throws DataAccessException {
         // Start with an empty DB (MemoryUserDAO is empty initially), make a request
         RegisterRequest request = new RegisterRequest("aliceusername", "alicepassword", "alicetest@gmail.com");
 
@@ -50,7 +50,7 @@ public class UserServiceTest {
     }
 
     @Test
-    void testRegister_UserAlreadyTaken() throws DataAccessException {
+    void testRegisterUserAlreadyTaken() throws DataAccessException {
         // Pre-insert user
         userDAO.createUser(new UserData("jamesusername", "jamespassword1", "jamesemail@gmail.com"));
 
@@ -63,7 +63,7 @@ public class UserServiceTest {
     }
 
     @Test
-    void testRegister_InvalidInput() {
+    void testRegisterInvalidInput() {
         // Try with blank username
         RegisterRequest badRequest = new RegisterRequest("", "blank", "email@mail.com");
         assertThrows(DataAccessException.class, () -> {
@@ -72,7 +72,7 @@ public class UserServiceTest {
     }
 
     @Test
-    void testLogin_Success() throws DataAccessException {
+    void testLoginSuccess() throws DataAccessException {
         // Register user so they exist in the DAO
         RegisterRequest registerRequest = new RegisterRequest("amy", "amypass2", "amy@provider.com");
         RegisterResult registerResult = userService.register(registerRequest);
@@ -94,7 +94,7 @@ public class UserServiceTest {
     }
 
     @Test
-    void testLogin_NoSuchUser() throws DataAccessException {
+    void testLoginNoSuchUser() throws DataAccessException {
         // Attempt to log in with nonexistent user
         LoginRequest loginRequest = new LoginRequest("rob", "123123123");
         assertThrows(DataAccessException.class, () -> {
@@ -103,7 +103,7 @@ public class UserServiceTest {
     }
 
     @Test
-    void testLogin_BadPassword() throws DataAccessException {
+    void testLoginBadPassword() throws DataAccessException {
         // Register a user
         RegisterRequest registerRequest = new RegisterRequest("devin_", "password", "devindevin@example.com");
         userService.register(registerRequest);
@@ -116,7 +116,7 @@ public class UserServiceTest {
     }
 
     @Test
-    void testLogin_MissingFields() {
+    void testLoginMissingFields() {
         // Missing username
         LoginRequest badRequest1 = new LoginRequest(null, "testtest");
         // Missing password
@@ -131,7 +131,7 @@ public class UserServiceTest {
     }
 
     @Test
-    void testLogout_Success() throws DataAccessException {
+    void testLogoutSuccess() throws DataAccessException {
         // Register/login first to get valid token
         RegisterResult regResult = userService.register(new RegisterRequest("john", "johnjohn", "a@b.com"));
         assertNotNull(regResult.authToken());
@@ -153,7 +153,7 @@ public class UserServiceTest {
     }
 
     @Test
-    void testLogout_InvalidToken() throws DataAccessException {
+    void testLogoutInvalidToken() throws DataAccessException {
         // Attempt to log out w random/bogus token
         LogoutRequest request = new LogoutRequest("this_token_does_not_exist");
 
@@ -164,7 +164,7 @@ public class UserServiceTest {
     }
 
     @Test
-    void testLogout_MissingToken() {
+    void testLogoutMissingToken() {
         // Attempt to log out w blank or null
         LogoutRequest badRequest = new LogoutRequest("");
         assertThrows(DataAccessException.class, () -> {

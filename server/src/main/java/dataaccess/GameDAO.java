@@ -26,9 +26,4 @@ public interface GameDAO {
      * Update an existing game’s state - after a move, after a user joins
      */
     void updateGame(GameData game) throws DataAccessException;
-
-    /**
-     * Delete a game
-     */
-    void deleteGame(int gameID) throws DataAccessException;
 }
