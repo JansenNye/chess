@@ -1,5 +1,6 @@
 package service;
 
+import chess.ChessGame;
 import dataaccess.AuthDAO;
 import dataaccess.DataAccessException;
 import dataaccess.GameDAO;
@@ -64,7 +65,8 @@ public class GameService {
         // Validate request
         if (request.authToken() == null || request.authToken().isBlank()) {
             throw new DataAccessException("Missing auth token");
-        } if (request.gameName() == null || request.gameName().isBlank()) {
+        }
+        if (request.gameName() == null || request.gameName().isBlank()) {
             throw new DataAccessException("Missing or invalid gameName");
         }
 
@@ -77,13 +79,17 @@ public class GameService {
         // Generate a unique gameID
         int newID = Math.abs(idGenerator.nextInt());
 
-        // Create a new GameData object
+        // Create a new ChessGame object with an initial board state
+        ChessGame newChessGame = new ChessGame();
+        // (Adjust to however you initialize a new board.)
+
+        // Create a new GameData object with that ChessGame
         GameData newGame = new GameData(
                 newID,
-                null,
-                null,
+                null,               // no white player yet
+                null,               // no black player yet
                 request.gameName(),
-                null
+                newChessGame
         );
 
         // Insert into DAO, return result

@@ -1,17 +1,18 @@
 package service;
 
-import org.mindrot.jbcrypt.BCrypt;
 import dataaccess.AuthDAO;
+import dataaccess.DataAccessException;
+import dataaccess.UserDAO;
+import model.AuthData;
+import model.UserData;
+import org.mindrot.jbcrypt.BCrypt;
 import service.requests.LoginRequest;
 import service.requests.LogoutRequest;
 import service.requests.RegisterRequest;
 import service.results.LoginResult;
 import service.results.LogoutResult;
 import service.results.RegisterResult;
-import dataaccess.DataAccessException;
-import dataaccess.UserDAO;
-import model.AuthData;
-import model.UserData;
+
 import java.util.UUID;
 
 public class UserService {
@@ -30,7 +31,7 @@ public class UserService {
         // Basic validation
         if (request.username() == null || request.username().isBlank() ||
                 request.password() == null || request.password().isBlank() ||
-                request.email() == null    || request.email().isBlank()) {
+                request.email() == null || request.email().isBlank()) {
             throw new DataAccessException("Invalid request fields");
         }
 
@@ -40,8 +41,11 @@ public class UserService {
             throw new DataAccessException("User already taken: " + request.username());
         }
 
-        // Create user
-        UserData newUser = new UserData(request.username(), request.password(), request.email());
+        // Hash password
+        String hashedPassword = BCrypt.hashpw(request.password(), BCrypt.gensalt());
+
+        // Create user with hashed password
+        UserData newUser = new UserData(request.username(), hashedPassword, request.email());
         userDAO.createUser(newUser);
 
         // Generate & store auth token
@@ -68,8 +72,8 @@ public class UserService {
             throw new DataAccessException("User does not exist: " + request.username());
         }
 
-        // Check password
-        if (!user.password().equals(request.password())) {
+        // Compare provided password with the stored (hashed) password
+        if (!BCrypt.checkpw(request.password(), user.password())) {
             throw new DataAccessException("Incorrect password for user: " + request.username());
         }
 
