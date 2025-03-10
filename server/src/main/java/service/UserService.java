@@ -1,5 +1,6 @@
 package service;
 
+import org.mindrot.jbcrypt.BCrypt;
 import dataaccess.AuthDAO;
 import service.requests.LoginRequest;
 import service.requests.LogoutRequest;
