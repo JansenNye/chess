@@ -69,4 +69,15 @@ public class DatabaseManager {
             throw new DataAccessException(e.getMessage());
         }
     }
+    public void testConnection() throws Exception {
+        try (var conn = DatabaseManager.getConnection()) {
+            try (var stmt = conn.prepareStatement("SELECT 1+1 AS result")) {
+                var rs = stmt.executeQuery();
+                if (rs.next()) {
+                    System.out.println("Connection successful: " + rs.getInt("result"));
+                }
+            }
+        }
+    }
 }
+
