@@ -3,6 +3,7 @@ package service;
 import dataaccess.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mindrot.jbcrypt.BCrypt;
 import service.requests.LoginRequest;
 import service.requests.LogoutRequest;
 import service.requests.RegisterRequest;
@@ -28,7 +29,7 @@ public class UserServiceTest {
 
     @Test
     void testRegisterSuccess() throws DataAccessException {
-        // Start with an empty DB (MemoryUserDAO is empty initially), make a request
+        // Start with an empty DB, make a request
         RegisterRequest request = new RegisterRequest("aliceusername", "alicepassword", "alicetest@gmail.com");
 
         // Call service
@@ -42,8 +43,12 @@ public class UserServiceTest {
         // Check DAOs to confirm
         UserData userInDB = userDAO.getUser("aliceusername");
         assertNotNull(userInDB);
-        assertEquals("alicepassword", userInDB.password());
+
+        // UPDATED/FIXED - hashing
+        assertTrue(BCrypt.checkpw("alicepassword", userInDB.password()),
+                "Database-stored password should be a valid bcrypt hash matching 'alicepassword'");
         assertEquals("alicetest@gmail.com", userInDB.email());
+
         AuthData authInDB = authDAO.getAuth(result.authToken());
         assertNotNull(authInDB);
         assertEquals("aliceusername", authInDB.username());
