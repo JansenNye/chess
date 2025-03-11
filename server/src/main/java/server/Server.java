@@ -1,7 +1,5 @@
 package server;
-import dataaccess.MemoryAuthDAO;
-import dataaccess.MemoryGameDAO;
-import dataaccess.MemoryUserDAO;
+import dataaccess.*;
 import server.handlers.*;
 import service.ClearService;
 import service.GameService;
@@ -15,9 +13,9 @@ public class Server {
         Spark.staticFiles.location("web");
 
         // Register your endpoints and handle exceptions here.
-        var userDAO = new MemoryUserDAO();
-        var gameDAO = new MemoryGameDAO();
-        var authDAO = new MemoryAuthDAO();
+        var userDAO = new UserDAOMySQL();
+        var gameDAO = new GameDAOMySQL();
+        var authDAO = new AuthDAOMySQL();
 
         // Services
         var clearService = new ClearService(userDAO, gameDAO, authDAO);
