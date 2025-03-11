@@ -45,7 +45,7 @@ public class GameService {
         // Fetch all games from GameDAO
         List<GameData> allGames = gameDAO.listGames();
 
-        // Convert each GameData to a simpler output form (GameInfo)
+        // Convert each GameData to simpler output (GameInfo)
         List<ListGamesResult.GameInfo> gameInfos = new ArrayList<>();
         for (GameData g : allGames) {
             gameInfos.add(
@@ -81,26 +81,19 @@ public class GameService {
             throw new DataAccessException("Unauthorized: invalid authToken");
         }
 
-        // Generate a unique gameID
         int newID = Math.abs(idGenerator.nextInt());
 
-        // Create a new ChessGame with an initial board
         ChessGame newChessGame = new ChessGame();
-        // (Adjust as needed to properly initialize your chess board.)
-
-        // Create a new GameData object, storing the ChessGame in the 'game' field
         GameData newGame = new GameData(
                 newID,
-                null,               // no white player yet
-                null,               // no black player yet
+                null,
+                null,
                 request.gameName(),
                 newChessGame
         );
 
-        // Insert into DAO
+        // Insert into DAO, return result
         gameDAO.createGame(newGame);
-
-        // Return result
         return new CreateGameResult(newID);
     }
 
@@ -127,18 +120,15 @@ public class GameService {
             throw new DataAccessException("Unauthorized: invalid authToken");
         }
 
-        // Fetch game from the DAO
+        // Fetch game from DAO
         GameData game = gameDAO.getGame(request.gameID());
         if (game == null) {
             throw new DataAccessException("Game not found with ID: " + request.gameID());
         }
 
-        // Access the current ChessGame state
+        // Access current ChessGame state
         ChessGame chessGame = game.game();
         if (chessGame == null) {
-            // If it's null, it means we never initialized a ChessGame.
-            // Shouldn't happen if createGame() sets it up,
-            // but let's handle it just in case.
             chessGame = new ChessGame();
         }
 
@@ -159,7 +149,7 @@ public class GameService {
             }
         } else { // "BLACK"
             if (game.blackUsername() == null) {
-                // Fill the black slot
+                // Fill black slot
                 game = new GameData(
                         game.gameID(),
                         game.whiteUsername(),
@@ -171,12 +161,6 @@ public class GameService {
                 throw new DataAccessException("Black slot already taken");
             }
         }
-
-        // If you needed to modify the ChessGame (e.g., place a piece, start a timer, etc.),
-        // you could do it here before you update the DB:
-        // chessGame.someMethodToUpdateBoard(...);
-
-        // Update the game record in the DB
         gameDAO.updateGame(game);
 
         return new JoinGameResult();

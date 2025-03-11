@@ -13,6 +13,7 @@ public class Server {
         Spark.staticFiles.location("web");
 
         // Register your endpoints and handle exceptions here.
+        // Replaced in-memory with SQL
         var userDAO = new UserDAOMySQL();
         var gameDAO = new GameDAOMySQL();
         var authDAO = new AuthDAOMySQL();

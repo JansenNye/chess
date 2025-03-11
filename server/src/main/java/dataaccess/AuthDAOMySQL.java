@@ -47,8 +47,7 @@ public class AuthDAOMySQL implements AuthDAO {
                             rs.getString("username")
                     );
                 }
-            }
-            return null; // or throw if not found
+            } return null;
         } catch (SQLException e) {
             throw new DataAccessException("Error retrieving auth record");
         }
