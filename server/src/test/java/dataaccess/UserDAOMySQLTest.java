@@ -1,18 +1,30 @@
 package dataaccess;
 
 import model.UserData;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 public class UserDAOMySQLTest {
 
     private UserDAO userDao;
+    private GameDAO gameDao;
+    private AuthDAO authDao;
 
     @BeforeEach
     void setup() throws DataAccessException {
+        // Instantiate all DAOs
+        gameDao = new GameDAOMySQL();  // if 'games' references 'users'
+        authDao = new AuthDAOMySQL();  // if 'auth' references 'users'
         userDao = new UserDAOMySQL();
-        // Clear table before each test
+
+        // Clear in child-first, parent-last order:
+        // 1) games
+        gameDao.clear();
+        // 2) auth
+        authDao.clear();
+        // 3) users
         userDao.clear();
     }
 
@@ -21,7 +33,6 @@ public class UserDAOMySQLTest {
         UserData user = new UserData("alice", "hashedPass123", "alice@byu.edu");
         assertDoesNotThrow(() -> userDao.createUser(user));
 
-        // retrieve and check
         UserData retrieved = userDao.getUser("alice");
         assertNotNull(retrieved, "User should exist after creation");
         assertEquals("alice", retrieved.username());
@@ -31,19 +42,15 @@ public class UserDAOMySQLTest {
 
     @Test
     void testCreateUser_Negative_DuplicateUsername() throws DataAccessException {
-        // Insert user once
         UserData user1 = new UserData("bob", "someHash", "bob@byu.edu");
         userDao.createUser(user1);
 
-        // Insert second user w/ the same username
         UserData user2 = new UserData("bob", "someOtherHash", "bob2@byu.edu");
-
         assertThrows(DataAccessException.class, () -> userDao.createUser(user2));
     }
 
     @Test
     void testGetUser_Positive() throws DataAccessException {
-        // Create and retrieve
         UserData user = new UserData("charlie", "charlieHash", "charlie@byu.edu");
         userDao.createUser(user);
 
@@ -54,18 +61,15 @@ public class UserDAOMySQLTest {
 
     @Test
     void testGetUser_Negative_NonExistent() throws DataAccessException {
-        // No users created, so retrieval should return null
         UserData retrieved = userDao.getUser("nonexistent");
         assertNull(retrieved, "Should return null for non-existent user");
     }
 
     @Test
     void testClear_Positive() throws DataAccessException {
-        // Insert multiple users
         userDao.createUser(new UserData("dave", "hash1", "dave@byu.edu"));
         userDao.createUser(new UserData("eve", "hash2", "eve@byu.edu"));
 
-        // Clear - both should be gone
         userDao.clear();
         assertNull(userDao.getUser("dave"));
         assertNull(userDao.getUser("eve"));

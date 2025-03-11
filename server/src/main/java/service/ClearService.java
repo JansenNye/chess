@@ -19,8 +19,8 @@ public class ClearService {
      * CLEAR endpoint - clear all data from the database
      */
     public void clear() throws DataAccessException {
-        userDAO.clear();
         gameDAO.clear();
         authDAO.clear();
+        userDAO.clear();
     }
 }
