@@ -21,36 +21,29 @@ public class GameDAOMySQLTest {
 
     @BeforeEach
     void setup() throws DataAccessException {
-        // Instantiate both DAOs
         userDao = new UserDAOMySQL();
         gameDao = new GameDAOMySQL();
 
-        // Clear tables before each test
-        // (Order can matter if you have foreign keys, but if you have ON DELETE CASCADE, it's less critical.)
         gameDao.clear();
         userDao.clear();
 
-        // Insert some users so we can reference them in games
-        // (Necessary if white_username or black_username references users(username))
         userDao.createUser(new UserData("alice", "aliceHash", "alice@byu.edu"));
         userDao.createUser(new UserData("bob", "bobHash", "bob@byu.edu"));
     }
 
     @Test
     void testCreateGame_Positive() throws DataAccessException {
-        // Create a ChessGame object
         ChessGame chess = new ChessGame();
 
         // Build GameData referencing existing users
         GameData game = new GameData(
-                1234,             // game_id
-                "alice",          // white_username
-                "bob",            // black_username
-                "Friendly Match", // game_name
-                chess             // ChessGame object
+                1234,
+                "alice",
+                "bob",
+                "Friendly Match",
+                chess   // ChessGame obj
         );
 
-        // This should succeed now that "alice" and "bob" exist in the users table
         assertDoesNotThrow(() -> gameDao.createGame(game));
 
         // Retrieve & verify
@@ -65,13 +58,12 @@ public class GameDAOMySQLTest {
 
     @Test
     void testCreateGame_Negative_DuplicateID() throws DataAccessException {
-        // Insert a game with ID=1111
+        // Insert game w/ ID=1111
         GameData g1 = new GameData(1111, "alice", "bob", "TestGame1", new ChessGame());
         gameDao.createGame(g1);
 
-        // Attempt to insert another game with the same ID
+        // Attempt to insert another game w same ID
         GameData g2 = new GameData(1111, "alice", null, "TestGame2", new ChessGame());
-        // Expect a DataAccessException if game_id is a PRIMARY KEY
         assertThrows(DataAccessException.class, () -> gameDao.createGame(g2));
     }
 
@@ -111,15 +103,14 @@ public class GameDAOMySQLTest {
         GameData retrieved = gameDao.getGame(5555);
         assertNotNull(retrieved);
 
-        // Let's update the blackUsername to "bob" and gameName
+        // Update black username to "bob" and gameName
         GameData updated = new GameData(
                 retrieved.gameID(),
                 retrieved.whiteUsername(),
                 "bob", // now referencing existing user bob
                 "UpdatedGame",
                 retrieved.game() // same ChessGame object
-        );
-        gameDao.updateGame(updated);
+        );  gameDao.updateGame(updated);
 
         // Retrieve again
         GameData afterUpdate = gameDao.getGame(5555);
