@@ -10,32 +10,27 @@ import static org.junit.jupiter.api.Assertions.*;
 public class AuthDAOMySQLTest {
 
     private AuthDAO authDao;
-    private UserDAO userDao;
-    private GameDAO gameDao;
 
     @BeforeEach
     void setup() throws DataAccessException {
-        gameDao = new GameDAOMySQL();
+        GameDAO gameDao = new GameDAOMySQL();
         authDao = new AuthDAOMySQL();
-        userDao = new UserDAOMySQL();
+        UserDAO userDao = new UserDAOMySQL();
 
-        // child of users
-        gameDao.clear();
-        // child of users
-        authDao.clear();
-        // users
-        userDao.clear();
+        gameDao.clear();  // child
+        authDao.clear();  // child
+        userDao.clear();  // parent
 
-        // Insert user for referencing in auth
-        userDao.createUser(new UserData("alice", "hash", "alice@byu.edu"));
+        userDao.createUser(new UserData("alice", "blah", "alice@byu.edu"));
     }
 
     @Test
     void testCreateAuth_Positive() throws DataAccessException {
-        AuthData auth = new AuthData("token123", "alice");
+        AuthData auth = new AuthData("tokenblah", "alice");
         assertDoesNotThrow(() -> authDao.createAuth(auth));
 
-        AuthData retrieved = authDao.getAuth("token123");
+        // Retrieve & verify
+        AuthData retrieved = authDao.getAuth("tokenblah");
         assertNotNull(retrieved);
         assertEquals("alice", retrieved.username());
     }
@@ -48,10 +43,10 @@ public class AuthDAOMySQLTest {
 
     @Test
     void testGetAuth_Positive() throws DataAccessException {
-        authDao.createAuth(new AuthData("tokentokentoken", "alexa"));
-        AuthData retrieved = authDao.getAuth("tokentokentoken");
+        authDao.createAuth(new AuthData("token456", "alice"));
+        AuthData retrieved = authDao.getAuth("token456");
         assertNotNull(retrieved);
-        assertEquals("alexa", retrieved.username());
+        assertEquals("alice", retrieved.username());
     }
 
     @Test
@@ -62,9 +57,9 @@ public class AuthDAOMySQLTest {
 
     @Test
     void testDeleteAuth_Positive() throws DataAccessException {
-        authDao.createAuth(new AuthData("token111", "alexa"));
-        authDao.deleteAuth("token111");
-        assertNull(authDao.getAuth("token111"), "Token should be deleted");
+        authDao.createAuth(new AuthData("token789", "alice"));
+        authDao.deleteAuth("token789");
+        assertNull(authDao.getAuth("token789"), "Token should be deleted");
     }
 
     @Test
