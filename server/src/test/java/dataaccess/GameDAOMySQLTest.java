@@ -30,7 +30,7 @@ public class GameDAOMySQLTest {
     }
 
     @Test
-    void testCreateGame_Positive() throws DataAccessException {
+    void testCreateGamePositive() throws DataAccessException {
         ChessGame chess = new ChessGame();
         GameData game = new GameData(
                 1234,
@@ -52,7 +52,7 @@ public class GameDAOMySQLTest {
     }
 
     @Test
-    void testCreateGame_Negative_DuplicateID() throws DataAccessException {
+    void testCreateGameNegativeDuplicateID() throws DataAccessException {
         GameData g1 = new GameData(1111, "alice", "bob", "TestGame1", new ChessGame());
         gameDao.createGame(g1);
 
@@ -62,7 +62,7 @@ public class GameDAOMySQLTest {
     }
 
     @Test
-    void testGetGame_Positive() throws DataAccessException {
+    void testGetGamePositive() throws DataAccessException {
         GameData g = new GameData(2222, "alice", null, "TestGame", new ChessGame());
         gameDao.createGame(g);
 
@@ -73,13 +73,13 @@ public class GameDAOMySQLTest {
     }
 
     @Test
-    void testGetGame_Negative_NonExistent() throws DataAccessException {
+    void testGetGameNegativeNonExistent() throws DataAccessException {
         GameData retrieved = gameDao.getGame(9999);
         assertNull(retrieved, "Should return null for non-existent gameID");
     }
 
     @Test
-    void testListGames_Positive() throws DataAccessException {
+    void testListGamesPositive() throws DataAccessException {
         gameDao.createGame(new GameData(3333, "alice", "bob", "GameOne", new ChessGame()));
         gameDao.createGame(new GameData(4444, "alice", null, "GameTwo", new ChessGame()));
 
@@ -88,7 +88,7 @@ public class GameDAOMySQLTest {
     }
 
     @Test
-    void testUpdateGame_Positive() throws DataAccessException {
+    void testUpdateGamePositive() throws DataAccessException {
         GameData original = new GameData(5555, "alice", null, "Original", new ChessGame());
         gameDao.createGame(original);
 
@@ -116,7 +116,7 @@ public class GameDAOMySQLTest {
     }
 
     @Test
-    void testClear_Positive() throws DataAccessException {
+    void testClearPositive() throws DataAccessException {
         gameDao.createGame(new GameData(6666, "alice", "bob", "ClearTest", new ChessGame()));
         gameDao.createGame(new GameData(7777, "alice", null, "ClearTest2", new ChessGame()));
 

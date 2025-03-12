@@ -44,7 +44,7 @@ public class UserDAOMySQLTest {
     }
 
     @Test
-    void testGetUser_Positive() throws DataAccessException {
+    void testGetUserPositive() throws DataAccessException {
         UserData user = new UserData("charlie", "charlieHash", "charlie@byu.edu");
         userDao.createUser(user);
 
@@ -54,14 +54,14 @@ public class UserDAOMySQLTest {
     }
 
     @Test
-    void testGetUser_Negative_NonExistent() throws DataAccessException {
-        // No users created, so retrieval should return null
+    void testGetUserNegativeNonExistent() throws DataAccessException {
+        // No users created, retrieval should return null
         UserData retrieved = userDao.getUser("nonexistent");
         assertNull(retrieved, "Should return null for non-existent user");
     }
 
     @Test
-    void testClear_Positive() throws DataAccessException {
+    void testClearPositive() throws DataAccessException {
         userDao.createUser(new UserData("dave", "hash1", "dave@byu.edu"));
         userDao.createUser(new UserData("evie", "hash2", "evie@byu.edu"));
 

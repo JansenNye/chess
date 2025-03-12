@@ -25,7 +25,7 @@ public class AuthDAOMySQLTest {
     }
 
     @Test
-    void testCreateAuth_Positive() throws DataAccessException {
+    void testCreateAuthPositive() throws DataAccessException {
         AuthData auth = new AuthData("tokenblah", "alice");
         assertDoesNotThrow(() -> authDao.createAuth(auth));
 
@@ -36,13 +36,13 @@ public class AuthDAOMySQLTest {
     }
 
     @Test
-    void testCreateAuth_Negative_NonExistentUser() {
+    void testCreateAuthNegativeNonExistentUser() {
         AuthData badAuth = new AuthData("badToken", "jansen");
         assertThrows(DataAccessException.class, () -> authDao.createAuth(badAuth));
     }
 
     @Test
-    void testGetAuth_Positive() throws DataAccessException {
+    void testGetAuthPositive() throws DataAccessException {
         authDao.createAuth(new AuthData("token456", "alice"));
         AuthData retrieved = authDao.getAuth("token456");
         assertNotNull(retrieved);
@@ -50,20 +50,20 @@ public class AuthDAOMySQLTest {
     }
 
     @Test
-    void testGetAuth_Negative_NonExistentToken() throws DataAccessException {
+    void testGetAuthNegativeNonExistentToken() throws DataAccessException {
         AuthData retrieved = authDao.getAuth("noSuchToken");
         assertNull(retrieved, "Should return null for non-existent token");
     }
 
     @Test
-    void testDeleteAuth_Positive() throws DataAccessException {
+    void testDeleteAuthPositive() throws DataAccessException {
         authDao.createAuth(new AuthData("token789", "alice"));
         authDao.deleteAuth("token789");
         assertNull(authDao.getAuth("token789"), "Token should be deleted");
     }
 
     @Test
-    void testClear_Positive() throws DataAccessException {
+    void testClearPositive() throws DataAccessException {
         authDao.createAuth(new AuthData("t1", "alice"));
         authDao.createAuth(new AuthData("t2", "alice"));
 
