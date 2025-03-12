@@ -36,7 +36,7 @@ public class DatabaseManager {
     /**
      * Creates the database if it does not already exist.
      */
-    static void createDatabase() throws DataAccessException {
+    public static void createDatabase() throws DataAccessException {
         try {
             var statement = "CREATE DATABASE IF NOT EXISTS " + DATABASE_NAME;
             var conn = DriverManager.getConnection(CONNECTION_URL, USER, PASSWORD);
@@ -67,6 +67,58 @@ public class DatabaseManager {
             return conn;
         } catch (SQLException e) {
             throw new DataAccessException(e.getMessage());
+        }
+    }
+
+    public static void createTablesIfNotExists() throws DataAccessException {
+        try (var conn = DriverManager.getConnection(CONNECTION_URL, USER, PASSWORD)) {
+            conn.setCatalog(DATABASE_NAME);
+
+            // Users
+            String createUsers = """
+            CREATE TABLE IF NOT EXISTS users (
+                username VARCHAR(50) NOT NULL PRIMARY KEY,
+                hashed_password VARCHAR(255) NOT NULL,
+                email VARCHAR(255)
+            )
+            """;
+            try (var stmt = conn.prepareStatement(createUsers)) {
+                stmt.executeUpdate();
+            }
+
+            // Auth
+            String createAuth = """
+            CREATE TABLE IF NOT EXISTS auth (
+                auth_token VARCHAR(64) NOT NULL PRIMARY KEY,
+                username VARCHAR(50) NOT NULL,
+                FOREIGN KEY (username) REFERENCES users(username)
+                    ON DELETE RESTRICT
+            )
+            """;
+            try (var stmt = conn.prepareStatement(createAuth)) {
+                stmt.executeUpdate();
+            }
+
+            // Games
+            String createGames = """
+            CREATE TABLE IF NOT EXISTS games (
+                game_id INT NOT NULL PRIMARY KEY,
+                white_username VARCHAR(50),
+                black_username VARCHAR(50),
+                game_name VARCHAR(255),
+                game_state JSON NOT NULL,
+                FOREIGN KEY (white_username) REFERENCES users(username)
+                    ON DELETE RESTRICT,
+                FOREIGN KEY (black_username) REFERENCES users(username)
+                    ON DELETE RESTRICT
+            )
+            """;
+            try (var stmt = conn.prepareStatement(createGames)) {
+                stmt.executeUpdate();
+            }
+
+        } catch (SQLException e) {
+            throw new DataAccessException("Error creating tables: " + e.getMessage());
         }
     }
     public void testConnection() throws Exception {
