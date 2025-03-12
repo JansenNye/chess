@@ -23,7 +23,7 @@ public class UserDAOMySQLTest {
     }
 
     @Test
-    void testCreateUser_Positive() throws DataAccessException {
+    void testCreateUserPositive() throws DataAccessException {
         UserData user = new UserData("alice", "hashedblah", "alice@byu.edu");
         assertDoesNotThrow(() -> userDao.createUser(user));
 
@@ -35,7 +35,7 @@ public class UserDAOMySQLTest {
     }
 
     @Test
-    void testCreateUser_Negative_DuplicateUsername() throws DataAccessException {
+    void testCreateUserNegativeDuplicateUsername() throws DataAccessException {
         UserData user1 = new UserData("bob", "blahblah1", "bob@byu.edu");
         userDao.createUser(user1);
 
