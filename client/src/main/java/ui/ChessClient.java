@@ -1,4 +1,7 @@
 package ui;
+import chess.ChessBoard;
+import chess.ChessPiece;
+import chess.ChessPosition;
 import serverfacade.ServerFacade;
 import exception.ResponseException;
 import model.AuthData;
@@ -9,6 +12,8 @@ import service.results.ListGamesResult.GameInfo;
 import java.util.Arrays;
 
 import java.util.List;
+
+import static ui.EscapeSequences.*;
 
 public class ChessClient {
     private final ServerFacade server;
@@ -99,35 +104,6 @@ public class ChessClient {
         return sb.toString();
     }
 
-    // Join game
-    private String joinGame(String... params) throws ResponseException {
-        ensureLoggedIn();
-
-        if (params.length == 2) {
-            int idx = Integer.parseInt(params[0]);
-            String color = params[1].toUpperCase();
-            List<GameInfo> games = server.listGames(authToken);
-            GameInfo info = games.get(idx - 1);
-            server.joinGame(authToken, info.gameID(), color);
-            state = State.GAMESTATE;
-
-            return String.format("Joined game '%s' as %s.", info.gameName(), color);
-        }
-        throw new ResponseException(400, "Expected: join <list index> <WHITE|BLACK>");
-    }
-
-    // Observe game
-    private String observeGame(String... params) throws ResponseException {
-        ensureLoggedIn();
-        if (params.length == 1) {
-            int idx = Integer.parseInt(params[0]);
-            List<GameInfo> games = server.listGames(authToken);
-            GameInfo info = games.get(idx - 1);
-            state = State.OBSERVING;
-            return String.format("Observing game '%s'", info.gameName());
-        }
-        throw new ResponseException(400, "Expected: observe <list index>");
-    }
 
     // help
     public String help() {
@@ -144,6 +120,49 @@ public class ChessClient {
         if (state != State.LOGGEDIN) {
             throw new ResponseException(400, "Must be logged in");
         }
+    }
+
+    // Join game
+    private String joinGame(String... params) throws ResponseException {
+        ensureLoggedIn();
+        if(params.length==2) {
+            int idx=Integer.parseInt(params[0]);
+            String color=params[1].toUpperCase();
+            List<GameInfo> games=server.listGames(authToken);
+            GameInfo info=games.get(idx-1);
+            server.joinGame(authToken, info.gameID(),color);
+            state=State.GAMESTATE;
+            GameData data = server.createGame(authToken, info.gameName()); // fetch board?
+            return drawBoard(data);
+        }
+        throw new ResponseException(400,"Expected: join <index> <WHITE|BLACK>");
+    }
+
+    private String observeGame(String... params) throws ResponseException {
+        ensureLoggedIn();
+        if(params.length==1) {
+            int idx=Integer.parseInt(params[0]);
+            GameInfo info=server.listGames(authToken).get(idx-1);
+            state=State.OBSERVING;
+            GameData data = server.createGame(authToken, info.gameName());
+            return drawBoard(data);
+        }
+        throw new ResponseException(400,"Expected: observe <index>");
+    }
+
+    private String drawBoard(GameData data) {
+        StringBuilder sb=new StringBuilder();
+        ChessBoard board=data.game().getBoard(); // assume getBoard returns 2D array of piece codes
+        for(int rank=7; rank>=0; rank--) {
+            sb.append(rank+1).append(" ");
+            for(int file=0; file<8; file++) {
+                ChessPiece piece = board.getPiece(new ChessPosition(rank, file));
+                sb.append(piece==null?EMPTY:piece);
+            }
+            sb.append("\n");
+        }
+        sb.append("  a  b  c  d  e  f  g  h\n");
+        return sb.toString();
     }
 }
 
