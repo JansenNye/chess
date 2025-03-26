@@ -4,13 +4,10 @@ import java.util.Scanner;
 import static ui.EscapeSequences.*;
 
 public class Repl {
-
     private final ChessClient client;
-
     public Repl(String serverUrl) {
         client = new ChessClient(serverUrl);
     }
-
     public void run() {
 
         System.out.println(SET_TEXT_COLOR_WHITE + "Welcome!");
@@ -30,11 +27,13 @@ public class Repl {
                 System.out.println(SET_TEXT_COLOR_BLUE + result);
             }
             catch (Throwable e)
+                    
             {
                 var msg = e.getMessage();
                 System.out.print(msg);
             }
-        }System.out.println();
+        }
+        System.out.println();
     }
 
     private void printPrompt() {
