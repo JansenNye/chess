@@ -121,6 +121,9 @@ public class ServerFacade {
         } return response;
     }
 
+    public GameData getGame(String authToken, int gameID) throws ResponseException {
+        return this.makeRequest("GET", "/game/" + gameID, null, GameData.class, authToken);
+    }
 
     private boolean isSuccessful(int status) {
         return status / 100 == 2;

@@ -123,45 +123,53 @@ public class ChessClient {
     }
 
     // Join game
-    private String joinGame(String... params) throws ResponseException {
+    private String joinGame(String... p) throws ResponseException {
         ensureLoggedIn();
-        if(params.length==2) {
-            int idx=Integer.parseInt(params[0]);
-            String color=params[1].toUpperCase();
-            List<GameInfo> games=server.listGames(authToken);
-            GameInfo info=games.get(idx-1);
-            server.joinGame(authToken, info.gameID(),color);
-            state=State.GAMESTATE;
-            GameData data = server.createGame(authToken, info.gameName()); // fetch board?
-            return drawBoard(data);
+        if (p.length == 2) {
+            int idx = Integer.parseInt(p[0]);
+            String color = p[1].toUpperCase();
+            GameInfo info = server.listGames(authToken).get(idx - 1);
+
+            server.joinGame(authToken, info.gameID(), color);
+            GameData data = server.getGame(authToken, info.gameID());  // NEW GET call
+            state = State.GAMESTATE;
+            boolean flip = color.equals("BLACK");
+            return drawBoard(data, flip);
         }
-        throw new ResponseException(400,"Expected: join <index> <WHITE|BLACK>");
+        throw new ResponseException(400, "Expected: join <index> <WHITE|BLACK>");
     }
 
-    private String observeGame(String... params) throws ResponseException {
+    private String observeGame(String... p) throws ResponseException {
         ensureLoggedIn();
-        if(params.length==1) {
-            int idx=Integer.parseInt(params[0]);
-            GameInfo info=server.listGames(authToken).get(idx-1);
-            state=State.OBSERVING;
-            GameData data = server.createGame(authToken, info.gameName());
-            return drawBoard(data);
+        if (p.length == 1) {
+            int idx = Integer.parseInt(p[0]);
+            GameInfo info = server.listGames(authToken).get(idx - 1);
+
+            GameData data = server.getGame(authToken, info.gameID());  // NEW GET call
+            state = State.OBSERVING;
+            return drawBoard(data, false);
         }
-        throw new ResponseException(400,"Expected: observe <index>");
+        throw new ResponseException(400, "Expected: observe <index>");
     }
 
-    private String drawBoard(GameData data) {
-        StringBuilder sb=new StringBuilder();
-        ChessBoard board=data.game().getBoard(); // assume getBoard returns 2D array of piece codes
-        for(int rank=7; rank>=0; rank--) {
-            sb.append(rank+1).append(" ");
-            for(int file=0; file<8; file++) {
-                ChessPiece piece = board.getPiece(new ChessPosition(rank, file));
-                sb.append(piece==null?EMPTY:piece);
+    private String drawBoard(GameData data, boolean flip) {
+        var board = data.game().getBoard();
+        StringBuilder sb = new StringBuilder();
+
+        int startRank = flip?0:7, endRank = flip?7:0, stepRank = flip?1:-1;
+        for(int r=startRank; r!=endRank+stepRank; r+=stepRank) {
+            sb.append(flip? r+1 : 8-r).append(" ");
+            int startFile = flip?7:0, endFile = flip?0:7, stepFile = flip?-1:1;
+            for(int f=startFile; f!=endFile+stepFile; f+=stepFile) {
+                var piece = board.getPiece(new ChessPosition(r, f));
+                boolean light = (r+f)%2==0;
+                sb.append(light?SET_BG_COLOR_LIGHT_GREY:SET_BG_COLOR_DARK_GREY)
+                        .append(piece==null?EMPTY:piece.toString())
+                        .append(RESET_BG_COLOR);
             }
             sb.append("\n");
         }
-        sb.append("  a  b  c  d  e  f  g  h\n");
+        sb.append(flip?"  h  g  f  e  d  c  b  a\n":"  a  b  c  d  e  f  g  h\n");
         return sb.toString();
     }
 }
