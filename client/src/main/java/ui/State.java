@@ -4,5 +4,5 @@ public enum State {
     LOGGEDIN,
     LOGGEDOUT,
     GAMESTATE,
-    OBSERVEGAME
+    OBSERVING
 }
