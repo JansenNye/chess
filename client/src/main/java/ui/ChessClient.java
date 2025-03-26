@@ -99,7 +99,46 @@ public class ChessClient {
         return sb.toString();
     }
 
-    c
+    // Join game
+    private String joinGame(String... params) throws ResponseException {
+        ensureLoggedIn();
+
+        if (params.length == 2) {
+            int idx = Integer.parseInt(params[0]);
+            String color = params[1].toUpperCase();
+            List<GameInfo> games = server.listGames(authToken);
+            GameInfo info = games.get(idx - 1);
+            server.joinGame(authToken, info.gameID(), color);
+            state = State.GAMESTATE;
+
+            return String.format("Joined game '%s' as %s.", info.gameName(), color);
+        }
+        throw new ResponseException(400, "Expected: join <list index> <WHITE|BLACK>");
+    }
+
+    // Observe game
+    private String observeGame(String... params) throws ResponseException {
+        ensureLoggedIn();
+        if (params.length == 1) {
+            int idx = Integer.parseInt(params[0]);
+            List<GameInfo> games = server.listGames(authToken);
+            GameInfo info = games.get(idx - 1);
+            state = State.OBSERVING;
+            return String.format("Observing game '%s'", info.gameName());
+        }
+        throw new ResponseException(400, "Expected: observe <list index>");
+    }
+
+    // help
+    public String help() {
+        if (state == State.LOGGEDOUT) {
+            return "register <USERNAME> <PASSWORD> <EMAIL>\nlogin <USERNAME> <PASSWORD>\nquit";
+        }
+        return String.join("\n", new String[]{
+                        "create <NAME>", "list", "join <INDEX> <WHITE|BLACK>", "observe <INDEX>", "logout", "quit"
+                }
+        );
+    }
 
     private void ensureLoggedIn() throws ResponseException {
         if (state != State.LOGGEDIN) {
