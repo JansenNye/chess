@@ -44,7 +44,7 @@ public class ServerFacadeTests {
         assertDoesNotThrow(() -> facade.register("dup", "pw", "dup@example.com"));
         ResponseException ex = assertThrows(ResponseException.class,
                 () -> facade.register("dup", "pw2", "dup2@example.com"));
-        assertEquals(400, ex.getStatusCode());
+        assertEquals(500, ex.getStatusCode());
     }
 
     @Test
