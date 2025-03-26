@@ -70,10 +70,12 @@ public class ServerFacadeTests {
 
     // CLEAR
     @Test void clear_idempotent() throws Exception {
-        facade.clear();
+        facade.clear(); // no-op on empty DB
         AuthData a = facade.register("a","pw","a@e.com");
         facade.clear();
-        assertTrue(facade.listGames(a.authToken()).isEmpty());
+        ResponseException ex = assertThrows(ResponseException.class,
+                () -> facade.listGames(a.authToken()));
+        assertEquals("Error: unauthorized", ex.getMessage());
     }
     @Test void clear_empty_noError() {
         assertDoesNotThrow(() -> facade.clear());
