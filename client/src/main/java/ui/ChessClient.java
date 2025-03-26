@@ -19,6 +19,7 @@ public class ChessClient {
         server = new ServerFacade(serverUrl);
     }
 
+    // Evaluate input
     public String eval(String input) {
         try {
             var tokens = input.trim().split("\\s+");
@@ -35,7 +36,7 @@ public class ChessClient {
                 case "observe" -> observeGame(params);
                 case "help" -> help();
                 case "quit" -> "quit";
-                default -> "No clue what that command is. Type help broski";
+                default -> "No clue what that command is. Type help, slime";
             };
         }
         catch (ResponseException e) {
@@ -73,7 +74,38 @@ public class ChessClient {
         return "Logged out.";
     }
 
-    
+    //Create game
+    private String createGame(String... params) throws ResponseException {
+        ensureLoggedIn();
+        if (params.length == 1) {
+            GameData game = server.createGame(authToken, params[0]);
+            return String.format("Created game '%s' (ID: %d)", game.gameName(), game.gameID());
+        }
+        throw new ResponseException(400, "Expected: create <game name>");
+    }
+
+    //List games
+    private String listGames() throws ResponseException {
+        ensureLoggedIn();
+
+        List<GameInfo> games = server.listGames(authToken);
+        if (games.isEmpty()) return "No games available";
+        StringBuilder sb = new StringBuilder();
+        int index = 1;
+        for (GameInfo info : games) {
+            sb.append(String.format("%d) %s | Players: %s/%s\n", index++, info.gameName(),
+                    info.whiteUsername() != null ? "1" : "0", info.blackUsername() != null ? "1" : "0"));
+        }
+        return sb.toString();
+    }
+
+    c
+
+    private void ensureLoggedIn() throws ResponseException {
+        if (state != State.LOGGEDIN) {
+            throw new ResponseException(400, "Must be logged in");
+        }
+    }
 }
 
 
