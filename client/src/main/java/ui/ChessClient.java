@@ -1,4 +1,5 @@
 package ui;
+import chess.ChessBoard;
 import chess.ChessGame;
 import chess.ChessPiece;
 import chess.ChessPosition;
@@ -93,7 +94,9 @@ public class ChessClient {
         ensureLoggedIn();
 
         List<ListGamesResult.GameInfo> games = server.listGames(authToken);
-        if (games.isEmpty()) return "No games available";
+        if (games.isEmpty()) {
+            return "No games available";
+        }
         StringBuilder sb = new StringBuilder();
         int index = 1;
         for (ListGamesResult.GameInfo info : games) {
@@ -168,60 +171,77 @@ public class ChessClient {
     }
 
     private String drawBoard(ChessGame game, boolean flip) {
-        var board = game.getBoard();
+        ChessBoard board = game.getBoard();
         StringBuilder sb = new StringBuilder();
 
+        // Determine iteration order based on flip
         int startRank = flip ? 1 : 8;
         int endRank   = flip ? 8 : 1;
         int stepRank  = flip ? 1 : -1;
 
-        for (int r = startRank; r != endRank + stepRank; r += stepRank) {
-            sb.append(r).append(" ");
+        // Iterate through ranks
+        for (int r = startRank; r != endRank + stepRank; r += stepRank) { // Nesting Level 1
+            sb.append(SET_TEXT_COLOR_WHITE); // Set color for rank number
+            sb.append(" ").append(r).append(" "); // Add rank number at the start of the row
+
             int startFile = flip ? 8 : 1;
             int endFile   = flip ? 1 : 8;
             int stepFile  = flip ? -1 : 1;
 
+            // Iterate through files
             for (int f = startFile; f != endFile + stepFile; f += stepFile) {
                 ChessPiece piece = board.getPiece(new ChessPosition(r, f));
-                boolean light = (r + f) % 2 == 0;
-                String square = EMPTY;
+                boolean isLightSquare = (r + f) % 2 == 0;
+                String pieceStr = getPieceString(piece);
 
-                if (piece != null) {
-                    switch (piece.getTeamColor()) {
-                        case WHITE -> {
-                            switch (piece.getPieceType()) {
-                                case KING   -> square = WHITE_KING;
-                                case QUEEN  -> square = WHITE_QUEEN;
-                                case ROOK   -> square = WHITE_ROOK;
-                                case BISHOP -> square = WHITE_BISHOP;
-                                case KNIGHT -> square = WHITE_KNIGHT;
-                                case PAWN   -> square = WHITE_PAWN;
-                            }
-                        }
-                        case BLACK -> {
-                            switch (piece.getPieceType()) {
-                                case KING   -> square = BLACK_KING;
-                                case QUEEN  -> square = BLACK_QUEEN;
-                                case ROOK   -> square = BLACK_ROOK;
-                                case BISHOP -> square = BLACK_BISHOP;
-                                case KNIGHT -> square = BLACK_KNIGHT;
-                                case PAWN   -> square = BLACK_PAWN;
-                            }
-                        }
-                    }
-                }
-
-                sb.append(light ? SET_BG_COLOR_LIGHT_GREY : SET_BG_COLOR_DARK_GREY)
-                        .append(square)
-                        .append(RESET_BG_COLOR);
+                // Append background color, piece string, and reset background
+                sb.append(isLightSquare ? SET_BG_COLOR_LIGHT_GREY : SET_BG_COLOR_DARK_GREY);
+                sb.append(pieceStr);
+                sb.append(RESET_BG_COLOR);
             }
+
+            sb.append(RESET_TEXT_COLOR);
             sb.append("\n");
         }
 
+        // Append file letters footer
+        sb.append(SET_TEXT_COLOR_WHITE); // Set color for file letters
         sb.append(flip
-                ? "  h  g  f  e  d  c  b  a\n"
-                : "  a  b  c  d  e  f  g  h\n");
+                ? "    h  g  f  e  d  c  b  a \n"
+                : "    a  b  c  d  e  f  g  h \n"); // Adjusted spacing for alignment
+        sb.append(RESET_TEXT_COLOR); // Reset color
+
         return sb.toString();
+    }
+
+    /**
+     * Helper method to get the appropriate escape sequence string for a chess piece.
+     * @param piece The chess piece (can be null).
+     * @return The string representation (e.g., WHITE_KING, EMPTY).
+     */
+    private static String getPieceString(ChessPiece piece) {
+        if (piece == null) {
+            return EMPTY;
+        }
+        return switch (piece.getTeamColor()) {
+            case WHITE -> switch (piece.getPieceType()) {
+                // Level 3 cases
+                case KING   -> WHITE_KING;
+                case QUEEN  -> WHITE_QUEEN;
+                case ROOK   -> WHITE_ROOK;
+                case BISHOP -> WHITE_BISHOP;
+                case KNIGHT -> WHITE_KNIGHT;
+                case PAWN   -> WHITE_PAWN;
+            };
+            case BLACK -> switch (piece.getPieceType()) {
+                case KING   -> BLACK_KING;
+                case QUEEN  -> BLACK_QUEEN;
+                case ROOK   -> BLACK_ROOK;
+                case BISHOP -> BLACK_BISHOP;
+                case KNIGHT -> BLACK_KNIGHT;
+                case PAWN   -> BLACK_PAWN;
+            };
+        };
     }
 }
 

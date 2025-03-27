@@ -62,7 +62,7 @@ public class ServerFacadeTests {
         AuthData auth = facade.register("x","pw","x@e.com");
         assertDoesNotThrow(() -> facade.logout(auth.authToken()));
     }
-    @Test void logout_invalidToken_fails() {
+    @Test void logoutInvalidTokenFails() {
         ResponseException ex = assertThrows(ResponseException.class,
                 () -> facade.logout("badToken"));
         assertEquals("Error: unauthorized", ex.getMessage());
