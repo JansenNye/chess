@@ -1,12 +1,10 @@
 package ui;
-import chess.ChessBoard;
-import chess.ChessPiece;
+import chess.ChessGame;
 import chess.ChessPosition;
 import serverfacade.ServerFacade;
 import exception.ResponseException;
 import model.AuthData;
 import model.GameData;
-import service.results.ListGamesResult;
 import service.results.ListGamesResult.GameInfo;
 
 import java.util.Arrays;
@@ -117,7 +115,7 @@ public class ChessClient {
     }
 
     private void ensureLoggedIn() throws ResponseException {
-        if (state != State.LOGGEDIN) {
+        if (state == State.LOGGEDOUT) {
             throw new ResponseException(400, "Must be logged in");
         }
     }
@@ -126,15 +124,23 @@ public class ChessClient {
     private String joinGame(String... p) throws ResponseException {
         ensureLoggedIn();
         if (p.length == 2) {
-            int idx = Integer.parseInt(p[0]);
-            String color = p[1].toUpperCase();
-            GameInfo info = server.listGames(authToken).get(idx - 1);
+            int idx;
+            try {
+                idx = Integer.parseInt(p[0].trim()) - 1;
+            } catch (NumberFormatException e) {
+                throw new ResponseException(400, "Expected numeric index");
+            }
 
-            server.joinGame(authToken, info.gameID(), color);
-            GameData data = server.getGame(authToken, info.gameID());  // NEW GET call
+            List<GameInfo> games = server.listGames(authToken);
+            if (idx < 0 || idx >= games.size()) {
+                throw new ResponseException(400, "Index out of bounds");
+            }
+
+            GameInfo info = games.get(idx);
+            server.joinGame(authToken, info.gameID(), p[1].toUpperCase());
             state = State.GAMESTATE;
-            boolean flip = color.equals("BLACK");
-            return drawBoard(data, flip);
+            boolean flip = p[1].equalsIgnoreCase("BLACK");
+            return drawBoard(new ChessGame(), flip);
         }
         throw new ResponseException(400, "Expected: join <index> <WHITE|BLACK>");
     }
@@ -142,24 +148,32 @@ public class ChessClient {
     private String observeGame(String... p) throws ResponseException {
         ensureLoggedIn();
         if (p.length == 1) {
-            int idx = Integer.parseInt(p[0]);
-            GameInfo info = server.listGames(authToken).get(idx - 1);
+            int idx;
+            try {
+                idx = Integer.parseInt(p[0].trim()) - 1;
+            } catch (NumberFormatException e) {
+                throw new ResponseException(400, "Expected numeric index");
+            }
 
-            GameData data = server.getGame(authToken, info.gameID());  // NEW GET call
+            List<GameInfo> games = server.listGames(authToken);
+            if (idx < 0 || idx >= games.size()) {
+                throw new ResponseException(400, "Index out of bounds");
+            }
+
             state = State.OBSERVING;
-            return drawBoard(data, false);
+            return drawBoard(new ChessGame(), false);
         }
         throw new ResponseException(400, "Expected: observe <index>");
     }
 
-    private String drawBoard(GameData data, boolean flip) {
-        var board = data.game().getBoard();
+    private String drawBoard(ChessGame game, boolean flip) {
+        var board = game.getBoard();
         StringBuilder sb = new StringBuilder();
 
-        int startRank = flip?0:7, endRank = flip?7:0, stepRank = flip?1:-1;
+        int startRank = flip?1:8, endRank = flip?8:1, stepRank = flip?1:-1;
         for(int r=startRank; r!=endRank+stepRank; r+=stepRank) {
             sb.append(flip? r+1 : 8-r).append(" ");
-            int startFile = flip?7:0, endFile = flip?0:7, stepFile = flip?-1:1;
+            int startFile = flip?8:1, endFile = flip?1:8, stepFile = flip?-1:1;
             for(int f=startFile; f!=endFile+stepFile; f+=stepFile) {
                 var piece = board.getPiece(new ChessPosition(r, f));
                 boolean light = (r+f)%2==0;
