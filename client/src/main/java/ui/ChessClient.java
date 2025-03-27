@@ -1,5 +1,6 @@
 package ui;
 import chess.ChessGame;
+import chess.ChessPiece;
 import chess.ChessPosition;
 import serverfacade.ServerFacade;
 import exception.ResponseException;
@@ -170,20 +171,56 @@ public class ChessClient {
         var board = game.getBoard();
         StringBuilder sb = new StringBuilder();
 
-        int startRank = flip?1:8, endRank = flip?8:1, stepRank = flip?1:-1;
-        for(int r=startRank; r!=endRank+stepRank; r+=stepRank) {
-            sb.append(flip? r+1 : 8-r).append(" ");
-            int startFile = flip?8:1, endFile = flip?1:8, stepFile = flip?-1:1;
-            for(int f=startFile; f!=endFile+stepFile; f+=stepFile) {
-                var piece = board.getPiece(new ChessPosition(r, f));
-                boolean light = (r+f)%2==0;
-                sb.append(light?SET_BG_COLOR_LIGHT_GREY:SET_BG_COLOR_DARK_GREY)
-                        .append(piece==null?EMPTY:piece.toString())
+        int startRank = flip ? 1 : 8;
+        int endRank   = flip ? 8 : 1;
+        int stepRank  = flip ? 1 : -1;
+
+        for (int r = startRank; r != endRank + stepRank; r += stepRank) {
+            sb.append(r).append(" ");
+            int startFile = flip ? 8 : 1;
+            int endFile   = flip ? 1 : 8;
+            int stepFile  = flip ? -1 : 1;
+
+            for (int f = startFile; f != endFile + stepFile; f += stepFile) {
+                ChessPiece piece = board.getPiece(new ChessPosition(r, f));
+                boolean light = (r + f) % 2 == 0;
+                String square = EMPTY;
+
+                if (piece != null) {
+                    switch (piece.getTeamColor()) {
+                        case WHITE -> {
+                            switch (piece.getPieceType()) {
+                                case KING   -> square = WHITE_KING;
+                                case QUEEN  -> square = WHITE_QUEEN;
+                                case ROOK   -> square = WHITE_ROOK;
+                                case BISHOP -> square = WHITE_BISHOP;
+                                case KNIGHT -> square = WHITE_KNIGHT;
+                                case PAWN   -> square = WHITE_PAWN;
+                            }
+                        }
+                        case BLACK -> {
+                            switch (piece.getPieceType()) {
+                                case KING   -> square = BLACK_KING;
+                                case QUEEN  -> square = BLACK_QUEEN;
+                                case ROOK   -> square = BLACK_ROOK;
+                                case BISHOP -> square = BLACK_BISHOP;
+                                case KNIGHT -> square = BLACK_KNIGHT;
+                                case PAWN   -> square = BLACK_PAWN;
+                            }
+                        }
+                    }
+                }
+
+                sb.append(light ? SET_BG_COLOR_LIGHT_GREY : SET_BG_COLOR_DARK_GREY)
+                        .append(square)
                         .append(RESET_BG_COLOR);
             }
             sb.append("\n");
         }
-        sb.append(flip?"  h  g  f  e  d  c  b  a\n":"  a  b  c  d  e  f  g  h\n");
+
+        sb.append(flip
+                ? "  h  g  f  e  d  c  b  a\n"
+                : "  a  b  c  d  e  f  g  h\n");
         return sb.toString();
     }
 }

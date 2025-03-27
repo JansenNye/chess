@@ -1,4 +1,5 @@
 package service;
+
 import chess.ChessGame;
 import dataaccess.AuthDAO;
 import dataaccess.DataAccessException;
@@ -27,142 +28,142 @@ public class GameService {
         this.authDAO = authDAO;
     }
 
-    /**
-     * Returns a list of all games, provided the user is authorized (authToken is valid).
-     */
+    // --- listGames method (no changes needed here) ---
     public ListGamesResult listGames(ListGamesRequest request) throws DataAccessException {
-        // Validate input
-        if (request.authToken() == null || request.authToken().isBlank()) {
-            throw new DataAccessException("Missing or invalid authToken");
+        if (request == null || request.authToken() == null || request.authToken().isBlank()) {
+            throw new DataAccessException("Error: bad request"); // 400
         }
-
-        // Check if authToken is valid
         AuthData authData = authDAO.getAuth(request.authToken());
         if (authData == null) {
-            throw new DataAccessException("Unauthorized: invalid or expired authToken");
+            throw new DataAccessException("Error: unauthorized"); // 401
         }
-
-        // Fetch all games from GameDAO
         List<GameData> allGames = gameDAO.listGames();
-
-        // Convert each GameData to simpler output (GameInfo)
         List<ListGamesResult.GameInfo> gameInfos = new ArrayList<>();
-        for (GameData g : allGames) {
-            gameInfos.add(
-                    new ListGamesResult.GameInfo(
-                            g.gameID(),
-                            g.whiteUsername(),
-                            g.blackUsername(),
-                            g.gameName()
-                    )
-            );
+        if (allGames != null) {
+            for (GameData g : allGames) {
+                gameInfos.add(new ListGamesResult.GameInfo(g.gameID(), g.whiteUsername(), g.blackUsername(), g.gameName()));
+            }
         }
-
-        // Return result
         return new ListGamesResult(gameInfos);
     }
 
-    /**
-     * Creates a new game in the system, returning the new game’s ID.
-     * We initialize a new ChessGame object so we actually store game state in the DB.
-     */
+    // --- createGame method (no changes needed here) ---
     public CreateGameResult createGame(CreateGameRequest request) throws DataAccessException {
-        // Validate request
+        if (request == null) {
+            throw new DataAccessException("Error: bad request"); // 400
+        }
         if (request.authToken() == null || request.authToken().isBlank()) {
-            throw new DataAccessException("Missing auth token");
+            throw new DataAccessException("Error: bad request"); // 400
         }
         if (request.gameName() == null || request.gameName().isBlank()) {
-            throw new DataAccessException("Missing or invalid gameName");
+            throw new DataAccessException("Error: bad request"); // 400
         }
-
-        // Verify auth token
         AuthData authData = authDAO.getAuth(request.authToken());
         if (authData == null) {
-            throw new DataAccessException("Unauthorized: invalid authToken");
+            throw new DataAccessException("Error: unauthorized"); // 401
         }
-
         int newID = Math.abs(idGenerator.nextInt());
-
         ChessGame newChessGame = new ChessGame();
-        GameData newGame = new GameData(
-                newID,
-                null,
-                null,
-                request.gameName(),
-                newChessGame
-        );
-
-        // Insert into DAO, return result
-        gameDAO.createGame(newGame);
+        newChessGame.getBoard().resetBoard();
+        GameData newGame = new GameData(newID, null, null, request.gameName(), newChessGame);
+        try {
+            gameDAO.createGame(newGame);
+        } catch (DataAccessException e) {
+            System.err.println("DAO Error during createGame: " + e.getMessage());
+            throw new DataAccessException("Error: Failed to create game in storage"); // 500
+        }
         return new CreateGameResult(newID);
     }
 
-    /**
-     * Joins the specified game as either WHITE or BLACK, if available.
-     * Demonstrates how you'd retrieve the ChessGame and update it if needed.
-     */
+    // --- joinGame method (UPDATED) ---
     public JoinGameResult joinGame(JoinGameRequest request) throws DataAccessException {
-        // Validate request
+        // 1. Validate request object itself
+        if (request == null) {
+            throw new DataAccessException("Error: bad request"); // 400
+        }
+        // 2. Validate authToken
         if (request.authToken() == null || request.authToken().isBlank()) {
-            throw new DataAccessException("No auth token provided");
+            // Usually bad token is 401, but bad request format could be 400. Let's map to 401 later.
+            throw new DataAccessException("Error: bad request"); // 400 initially, mapped to 401 later if token invalid
         }
+        // 3. Validate gameID format
         if (request.gameID() <= 0) {
-            throw new DataAccessException("Invalid game ID");
-        }
-        if (!"WHITE".equalsIgnoreCase(request.playerColor()) &&
-                !"BLACK".equalsIgnoreCase(request.playerColor())) {
-            throw new DataAccessException("Invalid player color (must be WHITE or BLACK)");
+            throw new DataAccessException("Error: bad request"); // 400
         }
 
-        // Check auth token
+        // 4. Validate playerColor
+        String requestedColor = request.playerColor(); // Can be null or empty if observing
+        boolean isObserving = (requestedColor == null || requestedColor.isBlank());
+        boolean isValidPlayerColor = !isObserving && (requestedColor.equalsIgnoreCase("WHITE") || requestedColor.equalsIgnoreCase("BLACK"));
+
+        // --- ADDED CHECK ---
+        // If a color was specified, but it wasn't valid ("WHITE" or "BLACK")
+        if (!isObserving && !isValidPlayerColor) {
+            throw new DataAccessException("Error: bad request"); // 400 - Explicitly reject invalid colors
+        }
+        // --- END ADDED CHECK ---
+
+        // 5. Now validate the auth token's existence
         AuthData authData = authDAO.getAuth(request.authToken());
         if (authData == null) {
-            throw new DataAccessException("Unauthorized: invalid authToken");
+            throw new DataAccessException("Error: unauthorized"); // 401
         }
 
-        // Fetch game from DAO
+        // 6. Fetch game from DAO (check if game exists)
         GameData game = gameDAO.getGame(request.gameID());
         if (game == null) {
-            throw new DataAccessException("Game not found with ID: " + request.gameID());
+            throw new DataAccessException("Error: bad request"); // 400 (Game not found for the given ID)
         }
 
-        // Access current ChessGame state
-        ChessGame chessGame = game.game();
-        if (chessGame == null) {
-            chessGame = new ChessGame();
-        }
+        // 7. If joining as a player (color was valid and provided)
+        if (isValidPlayerColor) {
+            String username = authData.username();
+            GameData updatedGame = game; // Start with current game data
 
-        // Determine which color the user wants to join
-        String username = authData.username();
-        if ("WHITE".equalsIgnoreCase(request.playerColor())) {
-            if (game.whiteUsername() == null) {
-                // Fill the white slot
-                game = new GameData(
-                        game.gameID(),
-                        username,
-                        game.blackUsername(),
-                        game.gameName(),
-                        chessGame
-                );
-            } else if (!game.whiteUsername().equals(username)) {
-                throw new DataAccessException("White slot already taken");
+            if ("WHITE".equalsIgnoreCase(requestedColor)) {
+                if (game.whiteUsername() == null) {
+                    // Assign user to white
+                    updatedGame = new GameData(game.gameID(), username, game.blackUsername(), game.gameName(), game.game());
+                } else if (!game.whiteUsername().equals(username)) {
+                    // White slot is taken by someone else
+                    throw new DataAccessException("Error: already taken"); // 403
+                } // If already joined as white, updatedGame == game, no change needed
+            } else { // "BLACK"
+                if (game.blackUsername() == null) {
+                    // Assign user to black
+                    updatedGame = new GameData(game.gameID(), game.whiteUsername(), username, game.gameName(), game.game());
+                } else if (!game.blackUsername().equals(username)) {
+                    // Black slot is taken by someone else
+                    throw new DataAccessException("Error: already taken"); // 403
+                } // If already joined as black, updatedGame == game, no change needed
             }
-        } else { // "BLACK"
-            if (game.blackUsername() == null) {
-                // Fill black slot
-                game = new GameData(
-                        game.gameID(),
-                        game.whiteUsername(),
-                        username,
-                        game.gameName(),
-                        chessGame
-                );
-            } else if (!game.blackUsername().equals(username)) {
-                throw new DataAccessException("Black slot already taken");
+
+            // Only call DAO update if the game state actually changed
+            if (updatedGame != game) {
+                try {
+                    gameDAO.updateGame(updatedGame);
+                } catch (DataAccessException e) {
+                    System.err.println("DAO Error during joinGame update: " + e.getMessage());
+                    throw new DataAccessException("Error: Failed to update game during join"); // 500
+                }
             }
         }
-        gameDAO.updateGame(game);
+        // 8. If observing (isObserving was true), no game update is needed.
 
+        // If no exception was thrown, the operation is considered successful.
         return new JoinGameResult();
+    }
+
+
+    // --- getGameById method (no changes needed here) ---
+    public GameData getGameById(int gameID) throws DataAccessException {
+        if (gameID <= 0) {
+            throw new DataAccessException("Error: bad request"); // 400
+        }
+        GameData game = gameDAO.getGame(gameID);
+        if (game == null) {
+            throw new DataAccessException("Error: bad request"); // 400
+        }
+        return game;
     }
 }
