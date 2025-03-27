@@ -3,11 +3,11 @@ package serverfacade;
 import com.google.gson.Gson;
 import exception.ResponseException;
 import model.*;
-import service.requests.CreateGameRequest;
-import service.requests.JoinGameRequest;
-import service.requests.LoginRequest;
-import service.requests.RegisterRequest;
-import service.results.ListGamesResult;
+import requests.CreateGameRequest;
+import requests.JoinGameRequest;
+import requests.LoginRequest;
+import requests.RegisterRequest;
+import results.ListGamesResult;
 
 import java.io.*;
 import java.net.*;

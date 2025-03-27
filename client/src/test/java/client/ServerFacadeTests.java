@@ -5,7 +5,7 @@ import model.AuthData;
 import model.GameData;
 import org.junit.jupiter.api.*;
 import serverfacade.ServerFacade;
-import service.results.ListGamesResult.GameInfo;
+import results.ListGamesResult.GameInfo;
 
 import java.util.List;
 

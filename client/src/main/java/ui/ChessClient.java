@@ -2,11 +2,11 @@ package ui;
 import chess.ChessGame;
 import chess.ChessPiece;
 import chess.ChessPosition;
+import results.ListGamesResult;
 import serverfacade.ServerFacade;
 import exception.ResponseException;
 import model.AuthData;
 import model.GameData;
-import service.results.ListGamesResult.GameInfo;
 
 import java.util.Arrays;
 
@@ -92,11 +92,11 @@ public class ChessClient {
     private String listGames() throws ResponseException {
         ensureLoggedIn();
 
-        List<GameInfo> games = server.listGames(authToken);
+        List<ListGamesResult.GameInfo> games = server.listGames(authToken);
         if (games.isEmpty()) return "No games available";
         StringBuilder sb = new StringBuilder();
         int index = 1;
-        for (GameInfo info : games) {
+        for (ListGamesResult.GameInfo info : games) {
             sb.append(String.format("%d) %s | Players: %s/%s\n", index++, info.gameName(),
                     info.whiteUsername() != null ? "1" : "0", info.blackUsername() != null ? "1" : "0"));
         }
@@ -132,12 +132,12 @@ public class ChessClient {
                 throw new ResponseException(400, "Expected numeric index");
             }
 
-            List<GameInfo> games = server.listGames(authToken);
+            List<ListGamesResult.GameInfo> games = server.listGames(authToken);
             if (idx < 0 || idx >= games.size()) {
                 throw new ResponseException(400, "Index out of bounds");
             }
 
-            GameInfo info = games.get(idx);
+            ListGamesResult.GameInfo info = games.get(idx);
             server.joinGame(authToken, info.gameID(), p[1].toUpperCase());
             state = State.GAMESTATE;
             boolean flip = p[1].equalsIgnoreCase("BLACK");
@@ -156,7 +156,7 @@ public class ChessClient {
                 throw new ResponseException(400, "Expected numeric index");
             }
 
-            List<GameInfo> games = server.listGames(authToken);
+            List<ListGamesResult.GameInfo> games = server.listGames(authToken);
             if (idx < 0 || idx >= games.size()) {
                 throw new ResponseException(400, "Index out of bounds");
             }

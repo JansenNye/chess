@@ -1,4 +1,4 @@
-package service.results;
+package results;
 
 public record LoginResult(
         String username,
