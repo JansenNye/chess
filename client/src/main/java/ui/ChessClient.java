@@ -84,7 +84,7 @@ public class ChessClient {
         ensureLoggedIn();
         if (params.length == 1) {
             GameData game = server.createGame(authToken, params[0]);
-            return String.format("Created game '%s' (ID: %d)", game.gameName(), game.gameID());
+            return String.format("Created game '%s'", game.gameName());
         }
         throw new ResponseException(400, "Expected: create <game name>");
     }
@@ -100,8 +100,13 @@ public class ChessClient {
         StringBuilder sb = new StringBuilder();
         int index = 1;
         for (ListGamesResult.GameInfo info : games) {
-            sb.append(String.format("%d) %s | Players: %s/%s\n", index++, info.gameName(),
-                    info.whiteUsername() != null ? "1" : "0", info.blackUsername() != null ? "1" : "0"));
+            String whitePlayer = info.whiteUsername() != null ? info.whiteUsername() : "None";
+            String blackPlayer = info.blackUsername() != null ? info.blackUsername() : "None";
+            sb.append(String.format("%d) %s | WHITE: %s | BLACK: %s\n",
+                    index++,
+                    info.gameName(),
+                    whitePlayer,
+                    blackPlayer));
         }
         return sb.toString();
     }
@@ -137,7 +142,7 @@ public class ChessClient {
 
             List<ListGamesResult.GameInfo> games = server.listGames(authToken);
             if (idx < 0 || idx >= games.size()) {
-                throw new ResponseException(400, "Index out of bounds");
+                throw new ResponseException(400, "Game at this index does not exist.");
             }
 
             ListGamesResult.GameInfo info = games.get(idx);
@@ -161,7 +166,7 @@ public class ChessClient {
 
             List<ListGamesResult.GameInfo> games = server.listGames(authToken);
             if (idx < 0 || idx >= games.size()) {
-                throw new ResponseException(400, "Index out of bounds");
+                throw new ResponseException(400, "Game at this index does not exist.");
             }
 
             state = State.OBSERVING;
@@ -195,7 +200,7 @@ public class ChessClient {
                 String pieceStr = getPieceString(piece);
 
                 // Append background color, piece string, and reset background
-                sb.append(isLightSquare ? SET_BG_COLOR_LIGHT_GREY : SET_BG_COLOR_DARK_GREY);
+                sb.append(isLightSquare ? SET_BG_COLOR_DARK_GREY : SET_BG_COLOR_LIGHT_GREY);
                 sb.append(pieceStr);
                 sb.append(RESET_BG_COLOR);
             }
@@ -226,20 +231,20 @@ public class ChessClient {
         return switch (piece.getTeamColor()) {
             case WHITE -> switch (piece.getPieceType()) {
                 // Level 3 cases
-                case KING   -> WHITE_KING;
-                case QUEEN  -> WHITE_QUEEN;
-                case ROOK   -> WHITE_ROOK;
-                case BISHOP -> WHITE_BISHOP;
-                case KNIGHT -> WHITE_KNIGHT;
-                case PAWN   -> WHITE_PAWN;
-            };
-            case BLACK -> switch (piece.getPieceType()) {
                 case KING   -> BLACK_KING;
                 case QUEEN  -> BLACK_QUEEN;
                 case ROOK   -> BLACK_ROOK;
                 case BISHOP -> BLACK_BISHOP;
                 case KNIGHT -> BLACK_KNIGHT;
                 case PAWN   -> BLACK_PAWN;
+            };
+            case BLACK -> switch (piece.getPieceType()) {
+                case KING   -> WHITE_KING;
+                case QUEEN  -> WHITE_QUEEN;
+                case ROOK   -> WHITE_ROOK;
+                case BISHOP -> WHITE_BISHOP;
+                case KNIGHT -> WHITE_KNIGHT;
+                case PAWN   -> WHITE_PAWN;
             };
         };
     }
