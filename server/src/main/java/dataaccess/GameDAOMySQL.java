@@ -2,6 +2,8 @@ package dataaccess;
 import model.GameData;
 import com.google.gson.Gson;
 import chess.ChessGame;
+import model.GameStatus;
+
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,8 +27,8 @@ public class GameDAOMySQL implements GameDAO {
     public void createGame(GameData game) throws DataAccessException {
         String gameJson = gson.toJson(game.game());
 
-        String sql = "INSERT INTO games (game_id, white_username, black_username, game_name, game_state) "
-                + "VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO games (game_id, white_username, black_username, game_name, game_state, status ) "
+                + "VALUES (?, ?, ?, ?, ?, ?)";
 
         try (var conn = DatabaseManager.getConnection();
              var stmt = conn.prepareStatement(sql)) {
@@ -37,7 +39,7 @@ public class GameDAOMySQL implements GameDAO {
             stmt.setString(3, game.blackUsername());
             stmt.setString(4, game.gameName());
             stmt.setString(5, gameJson);
-
+            stmt.setString(6, game.status().name());
             stmt.executeUpdate();
 
         } catch (SQLException e) {
@@ -47,7 +49,7 @@ public class GameDAOMySQL implements GameDAO {
 
     @Override
     public GameData getGame(int gameID) throws DataAccessException {
-        String sql = "SELECT game_id, white_username, black_username, game_name, game_state "
+        String sql = "SELECT game_id, white_username, black_username, game_name, game_state, status "
                 + "FROM games WHERE game_id = ?";
 
         try (var conn = DatabaseManager.getConnection(); var stmt = conn.prepareStatement(sql)) {
@@ -56,13 +58,16 @@ public class GameDAOMySQL implements GameDAO {
                 if (rs.next()) {
                     String gameJson = rs.getString("game_state");
                     ChessGame chessGame = gson.fromJson(gameJson, ChessGame.class);
+                    String statusStr = rs.getString("status"); // Get status string
+                    GameStatus status = GameStatus.valueOf(statusStr); // Convert string back to enum
 
                     return new GameData(
                             rs.getInt("game_id"),
                             rs.getString("white_username"),
                             rs.getString("black_username"),
                             rs.getString("game_name"),
-                            chessGame
+                            chessGame,
+                            status
                     );
                 }
             } return null;
@@ -74,7 +79,7 @@ public class GameDAOMySQL implements GameDAO {
 
     @Override
     public List<GameData> listGames() throws DataAccessException {
-        String sql = "SELECT game_id, white_username, black_username, game_name, game_state FROM games";
+        String sql = "SELECT game_id, white_username, black_username, game_name, game_state, status FROM games";
         List<GameData> games = new ArrayList<>();
 
         try (var conn = DatabaseManager.getConnection();
@@ -83,14 +88,17 @@ public class GameDAOMySQL implements GameDAO {
             while (rs.next()) {
                 String gameJson = rs.getString("game_state");
                 ChessGame chessGame = gson.fromJson(gameJson, ChessGame.class);
-
+                String statusStr = rs.getString("status");
+                GameStatus status = GameStatus.valueOf(statusStr);
                 GameData gameData = new GameData(
                         rs.getInt("game_id"),
                         rs.getString("white_username"),
                         rs.getString("black_username"),
                         rs.getString("game_name"),
-                        chessGame
+                        chessGame,
+                        status
                 );
+
                 games.add(gameData);
             }
             return games;
@@ -103,7 +111,7 @@ public class GameDAOMySQL implements GameDAO {
     @Override
     public void updateGame(GameData game) throws DataAccessException {
         String sql = "UPDATE games "
-                + "SET white_username = ?, black_username = ?, game_name = ?, game_state = ? "
+                + "SET white_username = ?, black_username = ?, game_name = ?, game_state = ?, status = ? "
                 + "WHERE game_id = ?";
 
         String gameJson = gson.toJson(game.game());
@@ -115,7 +123,9 @@ public class GameDAOMySQL implements GameDAO {
             stmt.setString(2, game.blackUsername());
             stmt.setString(3, game.gameName());
             stmt.setString(4, gameJson);
-            stmt.setInt(5, game.gameID());
+            stmt.setString(5, game.status().name());
+            stmt.setInt(6, game.gameID());
+            //is this correct?
 
             stmt.executeUpdate();
 

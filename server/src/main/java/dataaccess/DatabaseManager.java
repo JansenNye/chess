@@ -107,6 +107,7 @@ public class DatabaseManager {
                 black_username VARCHAR(50),
                 game_name VARCHAR(255),
                 game_state JSON NOT NULL,
+                status VARCHAR(30) NOT NULL DEFAULT 'ACTIVE',
                 FOREIGN KEY (white_username) REFERENCES users(username)
                     ON DELETE RESTRICT,
                 FOREIGN KEY (black_username) REFERENCES users(username)
@@ -132,4 +133,5 @@ public class DatabaseManager {
         }
     }
 }
+
 

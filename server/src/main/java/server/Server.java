@@ -8,6 +8,7 @@ import service.UserService;
 import spark.Spark;
 
 import dataaccess.DatabaseManager;
+import websocket.WebSocketHandler;
 
 public class Server {
 
@@ -52,6 +53,7 @@ public class Server {
         Spark.get("/game", listGamesHandler);
         Spark.post("/game", createGameHandler);
         Spark.put("/game", joinGameHandler);
+        Spark.webSocket("/ws", WebSocketHandler.class);
 
         // Wait for Spark to finish initialization
         Spark.awaitInitialization();
