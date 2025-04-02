@@ -550,25 +550,30 @@ public class ChessClient implements ServerMessageObserver {
     }
 
 
-    // Helper to get string representation of a piece (WITH TEXT COLOR)
+    // Get ASCII for piece
     private static String getPieceString(ChessPiece piece) {
-        if (piece == null) return EMPTY; // Ensure EMPTY has padding (e.g., "   ")
+        if (piece == null) return EMPTY; // EMPTY has padding
 
-        // Determine text color based on piece team
-        String textColor = switch (piece.getTeamColor()) {
-            // SET TO ACTUAL COLOR CONSTANTS
-            case WHITE -> SET_TEXT_COLOR_BLUE; // White pieces are Blue text?
-            case BLACK -> SET_TEXT_COLOR_RED;   // Black pieces are Red text
+        return switch (piece.getTeamColor()) {
+            case WHITE -> switch (piece.getPieceType()) {
+                // White pieces look black
+                case KING   -> BLACK_KING;
+                case QUEEN  -> BLACK_QUEEN;
+                case ROOK   -> BLACK_ROOK;
+                case BISHOP -> BLACK_BISHOP;
+                case PAWN   -> BLACK_PAWN;
+                case KNIGHT -> BLACK_KNIGHT;
+            };
+            case BLACK -> switch (piece.getPieceType()) {
+                // Black pieces look white
+                case KING   -> WHITE_KING;
+                case QUEEN  -> WHITE_QUEEN;
+                case ROOK   -> WHITE_ROOK;
+                case BISHOP -> WHITE_BISHOP;
+                case KNIGHT -> WHITE_KNIGHT;
+                case PAWN   -> WHITE_PAWN;
+            };
         };
-
-        // Determine piece symbol
-        String pieceSymbol = switch (piece.getPieceType()) {
-            case KING -> " K "; case QUEEN -> " Q "; case ROOK -> " R ";
-            case BISHOP -> " B "; case KNIGHT -> " N "; case PAWN -> " P ";
-        };
-
-        // Combine
-        return textColor + pieceSymbol + RESET_TEXT_COLOR;
     }
 
     // Help method updated for different states
