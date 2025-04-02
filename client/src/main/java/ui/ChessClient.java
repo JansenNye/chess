@@ -51,7 +51,7 @@ public class ChessClient implements ServerMessageObserver {
                 break;
             case ERROR:
                 ErrorMessage errorMsg = (ErrorMessage) message;
-                System.out.println(SET_TEXT_COLOR_RED + "\nServer Error: " + errorMsg.getErrorMessage() + RESET_TEXT_COLOR);
+                System.out.println(SET_TEXT_COLOR_RED + "\nServer Error. " + errorMsg.getErrorMessage() + RESET_TEXT_COLOR);
                 printPrompt(); // Show prompt again
                 break;
             case NOTIFICATION:
@@ -86,9 +86,9 @@ public class ChessClient implements ServerMessageObserver {
             };
 
         } catch (ResponseException e) { // HTTP errors from ServerFacade
-            return SET_TEXT_COLOR_RED + "HTTP Error: " + e.getMessage() + RESET_TEXT_COLOR;
+            return SET_TEXT_COLOR_RED + "HTTP Error. " + RESET_TEXT_COLOR;
         } catch (Exception e) {
-            return SET_TEXT_COLOR_RED + "Error: " + e.getMessage() + RESET_TEXT_COLOR;
+            return SET_TEXT_COLOR_RED + "Error" + RESET_TEXT_COLOR;
         }
     }
 
@@ -243,7 +243,8 @@ public class ChessClient implements ServerMessageObserver {
         } catch (Exception e) {
             wsLeaveCleanup();
             state = State.LOGGEDIN; // Revert state
-            throw new ResponseException(500, "Failed to connect to game server: " + e.getMessage());
+            // throw new ResponseException(500, "Failed to connect to game server: " + e.getMessage());
+            throw new ResponseException(500, "Failed to connect to game server.");
         }
     }
 
@@ -278,12 +279,13 @@ public class ChessClient implements ServerMessageObserver {
             wsCommunicator.sendMessage(connectCmd);
 
             state = State.OBSERVING; // Change state
-            return String.format(SET_TEXT_COLOR_GREEN + "Observing game %d. Waiting for game data..." + RESET_TEXT_COLOR, this.currentGameID);
+            return String.format(SET_TEXT_COLOR_GREEN + "Observing game %s. " + RESET_TEXT_COLOR, info.gameName());
 
         } catch (Exception e) {
             wsLeaveCleanup(); // Clean up if WebSocket connection or initial send fails
             state = State.LOGGEDIN; // Revert state
-            throw new ResponseException(500, "Failed to connect to game server: " + e.getMessage());
+            // throw new ResponseException(500, "Failed to connect to game server: " + e.getMessage());
+            throw new ResponseException(500, "Failed to connect to game server.");
         }
     }
 
@@ -310,7 +312,7 @@ public class ChessClient implements ServerMessageObserver {
         } catch (Exception e) {
             wsLeaveCleanup();
             state = State.LOGGEDIN;
-            return SET_TEXT_COLOR_YELLOW + "Error sending leave command, but you have left locally: " + e.getMessage() + RESET_TEXT_COLOR;
+            return SET_TEXT_COLOR_YELLOW + "Error sending leave command, but you have left locally" + RESET_TEXT_COLOR;
         }
     }
 
@@ -369,7 +371,7 @@ public class ChessClient implements ServerMessageObserver {
         } catch (IllegalArgumentException e) {
             return SET_TEXT_COLOR_RED + "Invalid position format. Use algebraic notation (e.g., 'a1', 'h8')." + RESET_TEXT_COLOR;
         } catch (Exception e) {
-            return SET_TEXT_COLOR_RED + "Error sending move: " + e.getMessage() + RESET_TEXT_COLOR;
+            return SET_TEXT_COLOR_RED + "Error sending move. " + RESET_TEXT_COLOR;
         }
     }
 
@@ -383,7 +385,7 @@ public class ChessClient implements ServerMessageObserver {
             wsCommunicator.sendMessage(resignCmd);
             return "Resignation command sent. Type 'leave' to exit game view.";
         } catch (Exception e) {
-            return SET_TEXT_COLOR_RED + "Error sending resignation: " + e.getMessage() + RESET_TEXT_COLOR;
+            return SET_TEXT_COLOR_RED + "Error sending resignation. " + RESET_TEXT_COLOR;
         }
     }
 
@@ -414,7 +416,7 @@ public class ChessClient implements ServerMessageObserver {
         } catch (IllegalArgumentException e) {
             return SET_TEXT_COLOR_RED + "Invalid position format. Use algebraic notation (e.g., 'a1', 'h8')." + RESET_TEXT_COLOR;
         } catch (Exception e) { // Catch potential errors from validMoves
-            return SET_TEXT_COLOR_RED + "Error calculating moves: " + e.getMessage() + RESET_TEXT_COLOR;
+            return SET_TEXT_COLOR_RED + "Error calculating moves." + RESET_TEXT_COLOR;
         }
     }
 
@@ -459,7 +461,7 @@ public class ChessClient implements ServerMessageObserver {
                     wsCommunicator.close();
                 }
             } catch (Exception e) {
-                System.err.println("Error closing WebSocket: " + e.getMessage());
+                System.err.println("Error closing WebSocket. ");
             }
         }
         // Reset client state related to the game

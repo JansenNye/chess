@@ -29,7 +29,7 @@ public class WebSocketCommunicator {
     @OnOpen
     public void onOpen(Session session) {
         this.session = session;
-        System.out.println("WebSocket connection opened.");
+        // System.out.println("WebSocket connection opened.");
     }
 
     // Called when a message is received from the server
@@ -54,7 +54,7 @@ public class WebSocketCommunicator {
             }
 
         } catch (Exception e) {
-            System.err.println("Error processing server message: " + messageJson);
+            System.err.println("Error processing server message." + messageJson);
             System.err.println("Exception: " + e.getMessage());
             e.printStackTrace();
             // notify observer?
@@ -68,7 +68,7 @@ public class WebSocketCommunicator {
     @OnClose
     public void onClose(Session session, CloseReason reason) {
         this.session = null; // Mark session as closed
-        System.out.println("WebSocket connection closed: " + reason.getReasonPhrase());
+        System.out.println("WebSocket connection closed" + reason.getReasonPhrase());
     }
 
     // Called when a WebSocket error occurs
@@ -86,7 +86,6 @@ public class WebSocketCommunicator {
         if (this.session != null && this.session.isOpen()) {
             String messageJson = gson.toJson(message);
             this.session.getBasicRemote().sendText(messageJson);
-            System.out.println("Sent message to server: " + messageJson); // Debugging
         } else {
             System.err.println("Cannot send message: WebSocket session is not open.");
             // Maybe throw exception or handle differently?
