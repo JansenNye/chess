@@ -6,6 +6,7 @@ import dataaccess.DataAccessException;
 import dataaccess.GameDAO;
 import model.AuthData;
 import model.GameData;
+import model.GameStatus;
 import requests.CreateGameRequest;
 import requests.JoinGameRequest;
 import requests.ListGamesRequest;
@@ -28,7 +29,6 @@ public class GameService {
         this.authDAO = authDAO;
     }
 
-    // --- listGames method (no changes needed here) ---
     public ListGamesResult listGames(ListGamesRequest request) throws DataAccessException {
         if (request == null || request.authToken() == null || request.authToken().isBlank()) {
             throw new DataAccessException("Error: bad request"); // 400
@@ -47,7 +47,6 @@ public class GameService {
         return new ListGamesResult(gameInfos);
     }
 
-    // --- createGame method (no changes needed here) ---
     public CreateGameResult createGame(CreateGameRequest request) throws DataAccessException {
         if (request == null) {
             throw new DataAccessException("Error: bad request"); // 400
@@ -65,7 +64,7 @@ public class GameService {
         int newID = Math.abs(idGenerator.nextInt());
         ChessGame newChessGame = new ChessGame();
         newChessGame.getBoard().resetBoard();
-        GameData newGame = new GameData(newID, null, null, request.gameName(), newChessGame);
+        GameData newGame = new GameData(newID, null, null, request.gameName(), newChessGame, GameStatus.ACTIVE);
         try {
             gameDAO.createGame(newGame);
         } catch (DataAccessException e) {
@@ -75,7 +74,6 @@ public class GameService {
         return new CreateGameResult(newID);
     }
 
-    // --- joinGame method (UPDATED) ---
     public JoinGameResult joinGame(JoinGameRequest request) throws DataAccessException {
         // 1. Validate request object itself
         if (request == null) {
@@ -83,7 +81,6 @@ public class GameService {
         }
         // 2. Validate authToken
         if (request.authToken() == null || request.authToken().isBlank()) {
-            // Usually bad token is 401, but bad request format could be 400. Let's map to 401 later.
             throw new DataAccessException("Error: bad request"); // 400 initially, mapped to 401 later if token invalid
         }
         // 3. Validate gameID format
@@ -96,12 +93,10 @@ public class GameService {
         boolean isObserving = (requestedColor == null || requestedColor.isBlank());
         boolean isValidPlayerColor = !isObserving && (requestedColor.equalsIgnoreCase("WHITE") || requestedColor.equalsIgnoreCase("BLACK"));
 
-        // --- ADDED CHECK ---
         // If a color was specified, but it wasn't valid ("WHITE" or "BLACK")
         if (!isObserving && !isValidPlayerColor) {
             throw new DataAccessException("Error: bad request"); // 400 - Explicitly reject invalid colors
         }
-        // --- END ADDED CHECK ---
 
         // 5. Now validate the auth token's existence
         AuthData authData = authDAO.getAuth(request.authToken());
@@ -123,7 +118,7 @@ public class GameService {
             if ("WHITE".equalsIgnoreCase(requestedColor)) {
                 if (game.whiteUsername() == null) {
                     // Assign user to white
-                    updatedGame = new GameData(game.gameID(), username, game.blackUsername(), game.gameName(), game.game());
+                    updatedGame = new GameData(game.gameID(), username, game.blackUsername(), game.gameName(), game.game(), game.status());
                 } else if (!game.whiteUsername().equals(username)) {
                     // White slot is taken by someone else
                     throw new DataAccessException("Error: already taken"); // 403
@@ -131,14 +126,14 @@ public class GameService {
             } else { // "BLACK"
                 if (game.blackUsername() == null) {
                     // Assign user to black
-                    updatedGame = new GameData(game.gameID(), game.whiteUsername(), username, game.gameName(), game.game());
+                    updatedGame = new GameData(game.gameID(), game.whiteUsername(), username, game.gameName(), game.game(), game.status());
                 } else if (!game.blackUsername().equals(username)) {
                     // Black slot is taken by someone else
                     throw new DataAccessException("Error: already taken"); // 403
-                } // If already joined as black, updatedGame == game, no change needed
+                }
             }
 
-            // Only call DAO update if the game state actually changed
+            // Only call DAO update if game state actually changed
             if (updatedGame != game) {
                 try {
                     gameDAO.updateGame(updatedGame);
@@ -150,20 +145,20 @@ public class GameService {
         }
         // 8. If observing (isObserving was true), no game update is needed.
 
-        // If no exception was thrown, the operation is considered successful.
         return new JoinGameResult();
     }
 
-
-    // --- getGameById method (no changes needed here) ---
+    
     public GameData getGameById(int gameID) throws DataAccessException {
         if (gameID <= 0) {
             throw new DataAccessException("Error: bad request"); // 400
         }
+
         GameData game = gameDAO.getGame(gameID);
         if (game == null) {
             throw new DataAccessException("Error: bad request"); // 400
         }
+
         return game;
     }
 }
