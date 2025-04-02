@@ -3,6 +3,7 @@ package service;
 import dataaccess.*;
 import model.AuthData;
 import model.GameData;
+import model.GameStatus;
 import model.UserData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,7 +28,7 @@ public class ClearServiceTest {
     void testClearEmptiesAllData() throws DataAccessException {
         // Insert test data
         userDAO.createUser(new UserData("alice", "secret", "alice@example.com"));
-        gameDAO.createGame(new GameData(1, "alice", null, "TestGame", null));
+        gameDAO.createGame(new GameData(1, "alice", null, "TestGame", null, GameStatus.ACTIVE));
         authDAO.createAuth(new AuthData("tok123", "alice"));
 
         // Clear

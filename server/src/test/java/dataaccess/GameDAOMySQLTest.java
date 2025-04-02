@@ -2,6 +2,7 @@ package dataaccess;
 
 import chess.ChessGame;
 import model.GameData;
+import model.GameStatus;
 import model.UserData;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,7 +38,8 @@ public class GameDAOMySQLTest {
                 "alice",
                 "bob",
                 "Friendly Match",
-                chess
+                chess,
+                GameStatus.ACTIVE
         );
 
         assertDoesNotThrow(() -> gameDao.createGame(game));
@@ -53,17 +55,17 @@ public class GameDAOMySQLTest {
 
     @Test
     void testCreateGameNegativeDuplicateID() throws DataAccessException {
-        GameData g1 = new GameData(1111, "alice", "bob", "TestGame1", new ChessGame());
+        GameData g1 = new GameData(1111, "alice", "bob", "TestGame1", new ChessGame(), GameStatus.ACTIVE);
         gameDao.createGame(g1);
 
         // Attempt to create another game with same ID
-        GameData g2 = new GameData(1111, "alice", null, "TestGame2", new ChessGame());
+        GameData g2 = new GameData(1111, "alice", null, "TestGame2", new ChessGame(), GameStatus.ACTIVE);
         assertThrows(DataAccessException.class, () -> gameDao.createGame(g2));
     }
 
     @Test
     void testGetGamePositive() throws DataAccessException {
-        GameData g = new GameData(2222, "alice", null, "TestGame", new ChessGame());
+        GameData g = new GameData(2222, "alice", null, "TestGame", new ChessGame(),  GameStatus.ACTIVE);
         gameDao.createGame(g);
 
         GameData retrieved = gameDao.getGame(2222);
@@ -80,8 +82,8 @@ public class GameDAOMySQLTest {
 
     @Test
     void testListGamesPositive() throws DataAccessException {
-        gameDao.createGame(new GameData(3333, "alice", "bob", "GameOne", new ChessGame()));
-        gameDao.createGame(new GameData(4444, "alice", null, "GameTwo", new ChessGame()));
+        gameDao.createGame(new GameData(3333, "alice", "bob", "GameOne", new ChessGame(), GameStatus.ACTIVE));
+        gameDao.createGame(new GameData(4444, "alice", null, "GameTwo", new ChessGame(), GameStatus.ACTIVE));
 
         List<GameData> games = gameDao.listGames();
         assertEquals(2, games.size(), "Should have 2 games in the list");
@@ -89,7 +91,7 @@ public class GameDAOMySQLTest {
 
     @Test
     void testUpdateGamePositive() throws DataAccessException {
-        GameData original = new GameData(5555, "alice", null, "Original", new ChessGame());
+        GameData original = new GameData(5555, "alice", null, "Original", new ChessGame(), GameStatus.ACTIVE);
         gameDao.createGame(original);
 
         // Retrieve & modify
@@ -104,7 +106,8 @@ public class GameDAOMySQLTest {
                 retrieved.whiteUsername(),
                 "bob",  // referencing an existing user
                 "UpdatedGame",
-                updatedChess
+                updatedChess,
+                GameStatus.ACTIVE
         );
         gameDao.updateGame(updated);
 
@@ -117,8 +120,8 @@ public class GameDAOMySQLTest {
 
     @Test
     void testClearPositive() throws DataAccessException {
-        gameDao.createGame(new GameData(6666, "alice", "bob", "ClearTest", new ChessGame()));
-        gameDao.createGame(new GameData(7777, "alice", null, "ClearTest2", new ChessGame()));
+        gameDao.createGame(new GameData(6666, "alice", "bob", "ClearTest", new ChessGame(), GameStatus.ACTIVE));
+        gameDao.createGame(new GameData(7777, "alice", null, "ClearTest2", new ChessGame(), GameStatus.ACTIVE));
 
         gameDao.clear();
 

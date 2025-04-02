@@ -148,7 +148,7 @@ public class GameService {
         return new JoinGameResult();
     }
 
-    
+
     public GameData getGameById(int gameID) throws DataAccessException {
         if (gameID <= 0) {
             throw new DataAccessException("Error: bad request"); // 400

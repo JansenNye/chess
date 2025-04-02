@@ -3,6 +3,7 @@ package service;
 import dataaccess.*;
 import model.AuthData;
 import model.GameData;
+import model.GameStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import requests.CreateGameRequest;
@@ -34,8 +35,8 @@ public class GameServiceTest {
         authDAO.createAuth(goodToken);
 
         // Add games
-        GameData game1 = new GameData(101, "alice", null, "MyFirstGame", null);
-        GameData game2 = new GameData(202, "bob", "charlie", "Showdown", null);
+        GameData game1 = new GameData(101, "alice", null, "MyFirstGame", null, GameStatus.ACTIVE);
+        GameData game2 = new GameData(202, "bob", "charlie", "Showdown", null, GameStatus.ACTIVE);
         gameDAO.createGame(game1);
         gameDAO.createGame(game2);
 
@@ -91,7 +92,7 @@ public class GameServiceTest {
         authDAO.createAuth(auth);
 
         // Create game with no players
-        GameData newGame = new GameData(1001, null, null, "TestGame", null);
+        GameData newGame = new GameData(1001, null, null, "TestGame", null,  GameStatus.ACTIVE);
         gameDAO.createGame(newGame);
 
         // Make request
@@ -111,7 +112,7 @@ public class GameServiceTest {
     void testJoinGameBlackSuccess() throws DataAccessException {
         // Similar but fill blackUsername
         authDAO.createAuth(new AuthData("token_1", "bobert"));
-        gameDAO.createGame(new GameData(2002, null, null, "AnotherGame", null));
+        gameDAO.createGame(new GameData(2002, null, null, "AnotherGame", null, GameStatus.ACTIVE));
 
         // Join game
         JoinGameRequest request = new JoinGameRequest("token_1", "BLACK", 2002);
@@ -124,7 +125,7 @@ public class GameServiceTest {
     @Test
     void testJoinGameInvalidToken() throws DataAccessException {
         // No tokens in DAO - invalid
-        gameDAO.createGame(new GameData(3003, null, null, "GameNoAuth", null));
+        gameDAO.createGame(new GameData(3003, null, null, "GameNoAuth", null, GameStatus.ACTIVE));
 
         // Try to join game
         JoinGameRequest req = new JoinGameRequest("bogus", "WHITE", 3003);
@@ -145,7 +146,7 @@ public class GameServiceTest {
     void testJoinGameColorAlreadyTaken() throws DataAccessException {
         authDAO.createAuth(new AuthData("tokenD", "dave"));
         // Pre-insert game - already has Eve as white
-        gameDAO.createGame(new GameData(4004, "eve", null, "FullWhiteSlot", null));
+        gameDAO.createGame(new GameData(4004, "eve", null, "FullWhiteSlot", null,  GameStatus.ACTIVE));
 
         // Now dave tries to join as white - not available
         JoinGameRequest req = new JoinGameRequest("tokenD", "WHITE", 4004);
@@ -156,7 +157,7 @@ public class GameServiceTest {
     void testJoinGameAlreadyJoined() throws DataAccessException {
         // Eve already in black slot
         authDAO.createAuth(new AuthData("tokenE", "eve"));
-        gameDAO.createGame(new GameData(5005, null, "eve", "BlackSlotFull", null));
+        gameDAO.createGame(new GameData(5005, null, "eve", "BlackSlotFull", null,  GameStatus.ACTIVE));
 
         JoinGameRequest req = new JoinGameRequest("tokenE", "BLACK", 5005);
         assertDoesNotThrow(() -> gameService.joinGame(req));
