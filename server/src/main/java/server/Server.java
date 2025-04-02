@@ -25,6 +25,7 @@ public class Server {
         // Set up Spark
         Spark.port(desiredPort);
         Spark.staticFiles.location("web");
+        Spark.webSocket("/ws", WebSocketHandler.class);
 
         // Instantiate DAOs
         var userDAO = new UserDAOMySQL();
@@ -53,7 +54,6 @@ public class Server {
         Spark.get("/game", listGamesHandler);
         Spark.post("/game", createGameHandler);
         Spark.put("/game", joinGameHandler);
-        Spark.webSocket("/ws", WebSocketHandler.class);
 
         // Wait for Spark to finish initialization
         Spark.awaitInitialization();
