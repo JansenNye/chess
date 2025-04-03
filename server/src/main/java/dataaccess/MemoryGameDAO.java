@@ -46,4 +46,14 @@ public class MemoryGameDAO implements GameDAO {
         }
         games.put(gameID, game);
     }
+
+    @Override
+    // UNUSED
+    public void deleteGame(int gameID, GameData game) throws DataAccessException {
+        if (game == null) {
+            throw new DataAccessException("Game cannot be null");
+        } else {
+            games.remove(gameID);
+        }
+    }
 }

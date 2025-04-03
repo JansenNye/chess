@@ -366,7 +366,7 @@ public class ChessClient implements ServerMessageObserver {
 
             MakeMoveCommand moveCmd = new MakeMoveCommand(authToken, currentGameID, move);
             wsCommunicator.sendMessage(moveCmd);
-            return "Move command sent (" + startPosStr + " to " + endPosStr + "). Waiting for server update...";
+            return "";
 
         } catch (IllegalArgumentException e) {
             return SET_TEXT_COLOR_RED + "Invalid position format. Use algebraic notation (e.g., 'a1', 'h8')." + RESET_TEXT_COLOR;
@@ -383,7 +383,7 @@ public class ChessClient implements ServerMessageObserver {
         try {
             ResignCommand resignCmd = new ResignCommand(authToken, currentGameID);
             wsCommunicator.sendMessage(resignCmd);
-            return "Resignation command sent. Type 'leave' to exit game view.";
+            return "You have resigned. Type 'leave' to exit game view.";
         } catch (Exception e) {
             return SET_TEXT_COLOR_RED + "Error sending resignation. " + RESET_TEXT_COLOR;
         }
@@ -530,7 +530,7 @@ public class ChessClient implements ServerMessageObserver {
                     bgColor = SET_BG_COLOR_GREEN;
                 } else {
                     // Standard checkerboard pattern
-                    bgColor = isLightSquare ? SET_BG_COLOR_LIGHT_GREY : SET_BG_COLOR_DARK_GREY;
+                    bgColor = isLightSquare ? SET_BG_COLOR_WHITE : SET_BG_COLOR_DARK_GREY;
                 }
 
                 sb.append(bgColor);

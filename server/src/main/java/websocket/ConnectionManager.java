@@ -24,7 +24,6 @@ public class ConnectionManager {
     public void add(Integer gameID, Session session, String username) {
         Connection newConnection = new Connection(username, session);
         gameConnections.computeIfAbsent(gameID, k -> new ArrayList<>()).add(newConnection);
-        System.out.printf("Connection added for user '%s' to game %d%n", username, gameID);
     }
 
     /** Removes a specific connection from a game. */
@@ -33,30 +32,22 @@ public class ConnectionManager {
         if (gameSessions != null) {
             Predicate<Connection> condition = conn -> conn.session.equals(session);
             boolean removed = gameSessions.removeIf(condition);
-            if (removed) {
-                System.out.printf("Connection removed for session in game %d%n", gameID);
-            }
             if (gameSessions.isEmpty()) {
                 gameConnections.remove(gameID);
-                System.out.printf("Game %d removed from active connections (no players).%n", gameID);
             }
         }
     }
 
     /** Removes a session from ALL games it might be in. */
     public void removeSessionGlobally(Session session) {
-        System.out.println("Attempting global removal for session: " + session.getRemoteAddress());
         // Iterate through all game entries
         gameConnections.forEach((gameID, connections) -> {
             // Use removeIf to safely remove the session if found
             Predicate<Connection> condition = conn -> conn.session.equals(session);
             boolean removed = connections.removeIf(condition);
             if (removed) {
-                System.out.printf("Removed session %s from game %d during global cleanup%n", session.getRemoteAddress(), gameID);
-                // Check if the list for this game is now empty
                 if (connections.isEmpty()) {
                     gameConnections.remove(gameID);
-                    System.out.printf("Game %d removed from active connections after global cleanup.%n", gameID);
                 }
             }
         });
@@ -97,13 +88,29 @@ public class ConnectionManager {
             if(currentList != null) {
                 boolean changed = currentList.removeAll(sessionsToRemove);
                 if (changed) {
-                    System.out.printf("Removed %d stale/erroring connections from game %d%n", sessionsToRemove.size(), gameID);
                     if (currentList.isEmpty()) {
                         gameConnections.remove(gameID);
-                        System.out.printf("Game %d removed (empty) after cleanup.%n", gameID);
                     }
                 }
             }
+        }
+    }
+    /** Removes all connections for a specific game and the game entry itself. */
+    public void removeGame(Integer gameID) {
+        gameConnections.remove(gameID);
+    }
+
+    /** Closes all connections associated with a game, then removes the game entry. */
+    public void closeConnectionsForGame(Integer gameID) {
+        List<Connection> gameConnectionsList = gameConnections.get(gameID);
+        if (gameConnectionsList != null) {
+            for (Connection conn : new ArrayList<>(gameConnectionsList)) {
+                if (conn.session.isOpen()) {
+                    conn.session.close(1000, "Game ended and removed by server");
+                }
+            } removeGame(gameID);
+        } else {
+            removeGame(gameID);
         }
     }
 }

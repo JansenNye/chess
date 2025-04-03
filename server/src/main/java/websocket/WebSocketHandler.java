@@ -24,7 +24,7 @@ public class WebSocketHandler {
     private final GameDAO gameDAO;
     // private final GameService gameService;
 
-    // Connection management (needs refinement)
+    // Connection management (needs refinement? )
     private final ConnectionManager connectionManager;
     private final Gson gson = new Gson();
 
@@ -38,12 +38,12 @@ public class WebSocketHandler {
 
     @OnWebSocketConnect
     public void onConnect(Session session) throws IOException {
-        System.out.println("WS Connect: " + session.getRemoteAddress());
+        // System.out.println("WS Connect: " + session.getRemoteAddress());
     }
 
     @OnWebSocketClose
     public void onClose(Session session, int statusCode, String reason) {
-        System.out.println("WS Close: " + session.getRemoteAddress() + " Code: " + statusCode + " Reason: " + reason);
+        // System.out.println("WS Close: " + session.getRemoteAddress() + " Code: " + statusCode + " Reason: " + reason);
         connectionManager.removeSessionGlobally(session); // Use improved removal
     }
 
@@ -75,7 +75,7 @@ public class WebSocketHandler {
                 case MAKE_MOVE -> handleMakeMove(session, messageJson, username);
                 case LEAVE -> handleLeave(session, messageJson, username);
                 case RESIGN -> handleResign(session, messageJson, username);
-                default -> sendError(session, "Unknown command type received.");
+                default -> sendError(session, "Unknown command.");
             }
 
         } catch (DataAccessException dbError) {
@@ -94,7 +94,6 @@ public class WebSocketHandler {
     }
 
     private void handleConnect(Session session, String messageJson, String username) throws DataAccessException, IOException {
-        System.out.println("Handling CONNECT for user: " + username);
         ConnectCommand connectCmd = gson.fromJson(messageJson, ConnectCommand.class);
         Integer gameID = connectCmd.getGameID();
 
@@ -125,7 +124,6 @@ public class WebSocketHandler {
         // Send LOAD_GAME message back to connecting client (root client)
         LoadGameMessage loadGameMsg = new LoadGameMessage(gameData.game());
         session.getRemote().sendString(gson.toJson(loadGameMsg));
-        System.out.println("Sent LOAD_GAME to " + username);
 
         // Send NOTIFICATION message to all other clients in the game
         String notificationText = String.format("%s joined the game as %s.", username, role);
@@ -134,7 +132,6 @@ public class WebSocketHandler {
     }
 
     private void handleMakeMove(Session session, String messageJson, String username) throws DataAccessException, IOException, InvalidMoveException {
-        System.out.println("Handling MAKE_MOVE for user: " + username);
         MakeMoveCommand moveCmd = gson.fromJson(messageJson, MakeMoveCommand.class);
         Integer gameID = moveCmd.getGameID();
         ChessMove move = moveCmd.getMove();
@@ -184,12 +181,10 @@ public class WebSocketHandler {
 
         if (currentGame.isInCheckmate(opponentColor)) {
             finalStatus = (opponentColor == ChessGame.TeamColor.BLACK) ? GameStatus.WHITE_WINS_CHECKMATE : GameStatus.BLACK_WINS_CHECKMATE;
-            endConditionNotificationText = String.format("Checkmate! %s (%s) wins!", username, playerColor);
-            System.out.println("Checkmate detected in game " + gameID);
+            endConditionNotificationText = String.format("Checkmate! %s (%s) wins.", username, playerColor);
         } else if (currentGame.isInStalemate(opponentColor)) {
             finalStatus = GameStatus.STALEMATE_DRAW;
             endConditionNotificationText = "Stalemate! The game is a draw.";
-            System.out.println("Stalemate detected in game " + gameID);
         }
 
         // 5. Update database if makemove succeeded
@@ -201,26 +196,22 @@ public class WebSocketHandler {
                 currentGame,
                 gameData.status()
         );
-        gameDAO.updateGame(updatedGameData); // Save the new state to DB
+        gameDAO.updateGame(updatedGameData); // Save new state to DB
 
         // 6. Broadcast updated game state to clients
-        LoadGameMessage loadGameMsg = new LoadGameMessage(currentGame); // Send the updated game
+        LoadGameMessage loadGameMsg = new LoadGameMessage(currentGame);
         String loadGameJson = gson.toJson(loadGameMsg);
-        connectionManager.broadcast(gameID, null, loadGameJson); // Send to everyone
-        System.out.println("Broadcast LOAD_GAME after move in game " + gameID);
+        connectionManager.broadcast(gameID, null, loadGameJson);
 
         // 7. Broadcast move notification to other clients
-        String moveNotation = move.toString();
-        String notificationText = String.format("%s made move %s.", username, moveNotation);
+        String notificationText = String.format("%s made move %s to %s.", username, move.getStartPosition(), move.getEndPosition());
         NotificationMessage notification = new NotificationMessage(notificationText);
         String notificationJson = gson.toJson(notification);
-        connectionManager.broadcast(gameID, session, notificationJson); // Exclude player who moved
-        System.out.println("Broadcast MOVE notification for game " + gameID);
+        connectionManager.broadcast(gameID, session, notificationJson);
 
         String checkNotificationText = null;
         if (finalStatus == GameStatus.ACTIVE && currentGame.isInCheck(opponentColor)) {
             checkNotificationText = String.format("%s is in Check!", opponentColor);
-            System.out.println("Check detected in game " + gameID);
         }
 
         String finalNotificationText = (endConditionNotificationText != null) ? endConditionNotificationText : checkNotificationText;
@@ -228,15 +219,18 @@ public class WebSocketHandler {
             NotificationMessage conditionNotification = new NotificationMessage(finalNotificationText);
             connectionManager.broadcast(gameID, null, gson.toJson(conditionNotification));
         }
+
+        // if (updatedGameData.status() != GameStatus.ACTIVE) {
+             // checkAndDeleteGameIfAppropriate(gameID);
+        // }
     }
 
     private void handleLeave(Session session, String messageJson, String username) throws DataAccessException, IOException {
-        System.out.println("Handling LEAVE for user: " + username);
         LeaveCommand leaveCmd = gson.fromJson(messageJson, LeaveCommand.class);
         Integer gameID = leaveCmd.getGameID();
 
         if (gameID == null) {
-            sendError(session, "Error: Game ID missing in LEAVE command.");
+            sendError(session, "Error: Game ID missing.");
             return;
         }
 
@@ -253,7 +247,7 @@ public class WebSocketHandler {
             }
             if (changed) {
                 gameDAO.updateGame(updatedGameData);
-                System.out.println("Updated game " + gameID + " - removed user " + username);
+                System.out.println("Updated game " + gameData.gameName() + " - removed user " + username);
             }
         }
 
@@ -263,9 +257,10 @@ public class WebSocketHandler {
         // Notify remaining clients
         String notificationText = String.format("%s left the game.", username);
         NotificationMessage notification = new NotificationMessage(notificationText);
-        connectionManager.broadcast(gameID, session, gson.toJson(notification)); // Exclude self
-        System.out.println("Broadcast LEAVE notification for game " + gameID);
+        connectionManager.broadcast(gameID, session, gson.toJson(notification));
 
+        // Delete game if appropriate
+        // checkAndDeleteGameIfAppropriate(gameID);
     }
 
     private void handleResign(Session session, String messageJson, String username) throws DataAccessException, IOException {
@@ -273,19 +268,19 @@ public class WebSocketHandler {
         Integer gameID = resignCmd.getGameID();
 
         if (gameID == null) {
-            sendError(session, "Error: Game ID missing in RESIGN command.");
+            sendError(session, "Error: Game ID missing.");
             return;
         }
 
         // Get game, check if user is player
         GameData gameData = gameDAO.getGame(gameID);
         if (gameData == null) {
-            sendError(session, "Error: Game " + gameID + " not found.");
+            sendError(session, "Error: Game not found.");
             return;
         }
 
         if (gameData.status() != GameStatus.ACTIVE) {
-            sendError(session, "Error: Cannot resign, game is already over (" + gameData.status() + ")."); return;
+            sendError(session, "Error: Game is already over (" + gameData.status() + ")."); return;
         }
 
         ChessGame.TeamColor resigningColor = null;
@@ -295,7 +290,8 @@ public class WebSocketHandler {
             resigningColor = ChessGame.TeamColor.BLACK;
         }
         if (resigningColor == null) {
-            sendError(session, "Error: Observers cannot resign."); return;
+            sendError(session, "Error: Observers cannot resign.");
+            return;
         }
 
         GameStatus finalStatus = (resigningColor == ChessGame.TeamColor.WHITE) ? GameStatus.WHITE_RESIGNED : GameStatus.BLACK_RESIGNED;
@@ -304,6 +300,7 @@ public class WebSocketHandler {
                 gameData.game(),
                 finalStatus
         );
+
         gameDAO.updateGame(updatedGameData);
 
         // Notify clients (including resigning player)
@@ -311,6 +308,7 @@ public class WebSocketHandler {
         String notificationText = String.format("%s (%s) resigned. %s wins.", username, resigningColor, winner);
         NotificationMessage notification = new NotificationMessage(notificationText);
         connectionManager.broadcast(gameID, null, gson.toJson(notification)); // Send to everyone
+        // checkAndDeleteGameIfAppropriate(gameID);
     }
 
     // Helper to send an error message to a specific session
@@ -326,4 +324,43 @@ public class WebSocketHandler {
             System.err.println("Failed to send error message '" + errorMessage + "': " + e.getMessage());
         }
     }
+
+//    private void checkAndDeleteGameIfAppropriate(Integer gameID) {
+//        if (gameID == null) return; // Shouldn't happen
+//        GameData gameData = null;
+//        boolean shouldDelete = false;
+//
+//        try {
+//            gameData = gameDAO.getGame(gameID);
+//
+//            if (gameData == null) {
+//                System.out.println("Game " + gameData.gameName() + " does not exist.");
+//                // Ensure it's removed from connection manager too, just in case
+//                connectionManager.removeGame(gameID);
+//                return;
+//            }
+//
+//            // Condition 1: Game is over
+//            if (gameData.status() != GameStatus.ACTIVE) {
+//                shouldDelete = true;
+//            }
+//            // Condition 2: Both player slots are empty
+//            else if (gameData.whiteUsername() == null && gameData.blackUsername() == null) {
+//                shouldDelete = true;
+//            }
+//
+//            if (shouldDelete) {
+//                // Close connections and remove from manager
+//                connectionManager.closeConnectionsForGame(gameID);
+//                gameDAO.deleteGame(gameID, gameData);
+//            }
+//
+//        } catch (DataAccessException e) {
+//            System.err.println("DB Error checking/deleting game " + gameID + ": " + e.getMessage());
+//            // Don't necessarily delete if DB check fails, might be temporary issue
+//        } catch (Exception e) {
+//            System.err.println("Unexpected error during game deletion check for " + gameID + ": " + e.getMessage());
+//            e.printStackTrace();
+//        }
+//    }
 }

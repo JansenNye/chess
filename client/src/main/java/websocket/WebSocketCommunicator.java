@@ -29,6 +29,8 @@ public class WebSocketCommunicator {
     @OnOpen
     public void onOpen(Session session) {
         this.session = session;
+        //Set timeout to 10 minutes instead of 5 - could be longer?
+        session.setMaxIdleTimeout(600000);
         // System.out.println("WebSocket connection opened.");
     }
 
@@ -68,7 +70,7 @@ public class WebSocketCommunicator {
     @OnClose
     public void onClose(Session session, CloseReason reason) {
         this.session = null; // Mark session as closed
-        System.out.println("WebSocket connection closed" + reason.getReasonPhrase());
+        // System.out.println("WebSocket connection closed" + reason.getReasonPhrase());
     }
 
     // Called when a WebSocket error occurs
@@ -98,7 +100,7 @@ public class WebSocketCommunicator {
         if (this.session != null && this.session.isOpen()) {
             this.session.close();
             this.session = null; // Ensure session is null after closing
-            System.out.println("WebSocket explicitly closed by client.");
+            // System.out.println("WebSocket explicitly closed by client.");
         }
     }
 
