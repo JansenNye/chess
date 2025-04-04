@@ -119,8 +119,9 @@ public class ChessClient implements ServerMessageObserver {
         return SET_TEXT_COLOR_GREEN + "Registered & logged in as: " + data.username() + RESET_TEXT_COLOR;
     }
     private String login(String... params) throws ResponseException {
-        if (params.length != 2) throw new ResponseException(400, "Usage: login <username> <password>");
-        AuthData data = server.login(params[0], params[1]);
+        if (params.length != 2) {
+            throw new ResponseException(400, "Usage: login <username> <password>");
+        } AuthData data = server.login(params[0], params[1]);
         authToken = data.authToken();
         state = State.LOGGEDIN; // Set state
         return SET_TEXT_COLOR_GREEN + "Logged in as: " + data.username() + RESET_TEXT_COLOR;
