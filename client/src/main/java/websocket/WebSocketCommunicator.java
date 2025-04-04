@@ -31,7 +31,6 @@ public class WebSocketCommunicator {
         this.session = session;
         //Set timeout to 10 minutes instead of 5 - could be longer?
         session.setMaxIdleTimeout(600000);
-        // System.out.println("WebSocket connection opened.");
     }
 
     // Called when a message is received from the server
@@ -70,7 +69,6 @@ public class WebSocketCommunicator {
     @OnClose
     public void onClose(Session session, CloseReason reason) {
         this.session = null; // Mark session as closed
-        // System.out.println("WebSocket connection closed" + reason.getReasonPhrase());
     }
 
     // Called when a WebSocket error occurs

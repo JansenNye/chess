@@ -530,7 +530,7 @@ public class ChessClient implements ServerMessageObserver {
                     bgColor = SET_BG_COLOR_GREEN;
                 } else {
                     // Standard checkerboard pattern
-                    bgColor = isLightSquare ? SET_BG_COLOR_WHITE : SET_BG_COLOR_DARK_GREY;
+                    bgColor = isLightSquare ? SET_BG_COLOR_LIGHT_GREY : SET_BG_COLOR_DARK_GREY;
                 }
 
                 sb.append(bgColor);
@@ -630,7 +630,7 @@ public class ChessClient implements ServerMessageObserver {
         return new ChessPosition(row, col);
     }
 
-    // Helper to check promotion piece type (used in makeMove ?)
+    // Helper to check promotion piece type (used in makeMove?)
     private boolean isValidPromotionPiece(ChessPiece.PieceType type) {
         return type == ChessPiece.PieceType.QUEEN || type == ChessPiece.PieceType.ROOK ||
                 type == ChessPiece.PieceType.BISHOP || type == ChessPiece.PieceType.KNIGHT;
