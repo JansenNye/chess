@@ -20,13 +20,17 @@ public class ConnectionManager {
 
     public final ConcurrentHashMap<Integer, List<Connection>> gameConnections = new ConcurrentHashMap<>();
 
-    /** Adds a connection for a given game. */
+    /**
+     * Adds a connection for a given game.
+     */
     public void add(Integer gameID, Session session, String username) {
         Connection newConnection = new Connection(username, session);
         gameConnections.computeIfAbsent(gameID, k -> new ArrayList<>()).add(newConnection);
     }
 
-    /** Removes a specific connection from a game. */
+    /**
+     * Removes a specific connection from a game.
+     */
     public void remove(Integer gameID, Session session) {
         List<Connection> gameSessions = gameConnections.get(gameID);
         if (gameSessions != null) {
@@ -38,7 +42,9 @@ public class ConnectionManager {
         }
     }
 
-    /** Removes a session from ALL games it might be in. */
+    /**
+     * Removes a session from ALL games it might be in.
+     */
     public void removeSessionGlobally(Session session) {
         // Iterate through all game entries
         gameConnections.forEach((gameID, connections) -> {
@@ -85,7 +91,7 @@ public class ConnectionManager {
         // Remove any sessions that failed or were closed
         if (!sessionsToRemove.isEmpty()) {
             List<Connection> currentList = gameConnections.get(gameID);
-            if(currentList != null) {
+            if (currentList != null) {
                 boolean changed = currentList.removeAll(sessionsToRemove);
                 if (changed) {
                     if (currentList.isEmpty()) {
@@ -93,24 +99,6 @@ public class ConnectionManager {
                     }
                 }
             }
-        }
-    }
-    /** Removes all connections for a specific game and the game entry itself. */
-    public void removeGame(Integer gameID) {
-        gameConnections.remove(gameID);
-    }
-
-    /** Closes all connections associated with a game, then removes the game entry. */
-    public void closeConnectionsForGame(Integer gameID) {
-        List<Connection> gameConnectionsList = gameConnections.get(gameID);
-        if (gameConnectionsList != null) {
-            for (Connection conn : new ArrayList<>(gameConnectionsList)) {
-                if (conn.session.isOpen()) {
-                    conn.session.close(1000, "Game ended and removed by server");
-                }
-            } removeGame(gameID);
-        } else {
-            removeGame(gameID);
         }
     }
 }

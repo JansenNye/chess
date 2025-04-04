@@ -65,22 +65,6 @@ public class WebSocketCommunicator {
         }
     }
 
-    // Called when the WebSocket connection is closed
-    @OnClose
-    public void onClose(Session session, CloseReason reason) {
-        this.session = null; // Mark session as closed
-    }
-
-    // Called when a WebSocket error occurs
-    @OnError
-    public void onError(Session session, Throwable throwable) {
-        System.err.println("WebSocket error: " + throwable.getMessage());
-        throwable.printStackTrace();
-        if (observer != null) {
-            observer.notify(new websocket.messages.ErrorMessage("WebSocket communication error: " + throwable.getMessage()));
-        }
-    }
-
     // Send message (UserGameCommand) to the server
     public void sendMessage(Object message) throws IOException {
         if (this.session != null && this.session.isOpen()) {

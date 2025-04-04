@@ -219,10 +219,6 @@ public class WebSocketHandler {
             NotificationMessage conditionNotification = new NotificationMessage(finalNotificationText);
             connectionManager.broadcast(gameID, null, gson.toJson(conditionNotification));
         }
-
-        // if (updatedGameData.status() != GameStatus.ACTIVE) {
-             // checkAndDeleteGameIfAppropriate(gameID);
-        // }
     }
 
     private void handleLeave(Session session, String messageJson, String username) throws DataAccessException, IOException {
