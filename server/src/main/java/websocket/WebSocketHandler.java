@@ -325,42 +325,4 @@ public class WebSocketHandler {
         }
     }
 
-//    private void checkAndDeleteGameIfAppropriate(Integer gameID) {
-//        if (gameID == null) return; // Shouldn't happen
-//        GameData gameData = null;
-//        boolean shouldDelete = false;
-//
-//        try {
-//            gameData = gameDAO.getGame(gameID);
-//
-//            if (gameData == null) {
-//                System.out.println("Game " + gameData.gameName() + " does not exist.");
-//                // Ensure it's removed from connection manager too, just in case
-//                connectionManager.removeGame(gameID);
-//                return;
-//            }
-//
-//            // Condition 1: Game is over
-//            if (gameData.status() != GameStatus.ACTIVE) {
-//                shouldDelete = true;
-//            }
-//            // Condition 2: Both player slots are empty
-//            else if (gameData.whiteUsername() == null && gameData.blackUsername() == null) {
-//                shouldDelete = true;
-//            }
-//
-//            if (shouldDelete) {
-//                // Close connections and remove from manager
-//                connectionManager.closeConnectionsForGame(gameID);
-//                gameDAO.deleteGame(gameID, gameData);
-//            }
-//
-//        } catch (DataAccessException e) {
-//            System.err.println("DB Error checking/deleting game " + gameID + ": " + e.getMessage());
-//            // Don't necessarily delete if DB check fails, might be temporary issue
-//        } catch (Exception e) {
-//            System.err.println("Unexpected error during game deletion check for " + gameID + ": " + e.getMessage());
-//            e.printStackTrace();
-//        }
-//    }
 }
