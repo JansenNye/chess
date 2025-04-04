@@ -133,22 +133,4 @@ public class GameDAOMySQL implements GameDAO {
             throw new DataAccessException("Error updating game");
         }
     }
-
-    @Override
-    // UNUSED
-    public void deleteGame(int gameID, GameData game) throws DataAccessException {
-        String sql = "DELETE FROM games WHERE game_id = ?";
-        try (var conn = DatabaseManager.getConnection();
-             var stmt = conn.prepareStatement(sql)) {
-            stmt.setInt(1, gameID);
-            int rowsAffected = stmt.executeUpdate();
-            if (rowsAffected == 0) {
-                System.out.println("Warning: Attempted to delete non-existent game ID: " + gameID);
-            } else {
-                System.out.println("Deleted game: " + game.gameName());
-            }
-        } catch (SQLException e) {
-            throw new DataAccessException("Error deleting game");
-        }
-    }
 }

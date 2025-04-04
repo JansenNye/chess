@@ -29,8 +29,4 @@ public interface GameDAO {
      */
     void updateGame(GameData game) throws DataAccessException;
 
-    /**
-     * Delete a game from the database.
-     */
-    void deleteGame(int gameID, GameData game) throws DataAccessException;
 }

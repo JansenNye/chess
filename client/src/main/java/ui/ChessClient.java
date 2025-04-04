@@ -69,7 +69,6 @@ public class ChessClient implements ServerMessageObserver {
             return SET_TEXT_COLOR_RED + "Error" + RESET_TEXT_COLOR;
         }
     }
-
     private String evalLoggedOut(String cmd, String[] params) throws ResponseException {
         return switch (cmd) {
             case "register" -> register(params);
@@ -79,7 +78,6 @@ public class ChessClient implements ServerMessageObserver {
             default -> SET_TEXT_COLOR_RED + "Unknown command. Available: register, login, help, quit" + RESET_TEXT_COLOR;
         };
     }
-
     private String evalLoggedIn(String cmd, String[] params) throws ResponseException {
         return switch (cmd) {
             case "create" -> createGame(params);
@@ -92,7 +90,6 @@ public class ChessClient implements ServerMessageObserver {
             default -> SET_TEXT_COLOR_RED + "Unknown command. Available: create, list, join, observe, logout, help, quit" + RESET_TEXT_COLOR;
         };
     }
-
     private String evalGameplay(String cmd, String[] params) {
         return switch (cmd) {
             case "move" -> makeMove(params);
@@ -104,7 +101,6 @@ public class ChessClient implements ServerMessageObserver {
             default -> SET_TEXT_COLOR_RED + "Unknown command. Available: move, resign, highlight, redraw, leave, help" + RESET_TEXT_COLOR;
         };
     }
-
     private String evalObserving(String cmd, String[] params) { // Removed throws
         return switch (cmd) {
             case "highlight" -> highlightMoves(params);
@@ -114,15 +110,14 @@ public class ChessClient implements ServerMessageObserver {
             default -> SET_TEXT_COLOR_RED + "Unknown command. Available: highlight, redraw, leave, help" + RESET_TEXT_COLOR;
         };
     }
-
     private String register(String... params) throws ResponseException {
-        if (params.length != 3) throw new ResponseException(400, "Usage: register <username> <password> <email>");
-        AuthData data = server.register(params[0], params[1], params[2]);
+        if (params.length != 3) {
+            throw new ResponseException(400, "Usage: register <username> <password> <email>");
+        }  AuthData data = server.register(params[0], params[1], params[2]);
         authToken = data.authToken();
         state = State.LOGGEDIN; // Set state
         return SET_TEXT_COLOR_GREEN + "Registered & logged in as: " + data.username() + RESET_TEXT_COLOR;
     }
-
     private String login(String... params) throws ResponseException {
         if (params.length != 2) throw new ResponseException(400, "Usage: login <username> <password>");
         AuthData data = server.login(params[0], params[1]);
@@ -130,7 +125,6 @@ public class ChessClient implements ServerMessageObserver {
         state = State.LOGGEDIN; // Set state
         return SET_TEXT_COLOR_GREEN + "Logged in as: " + data.username() + RESET_TEXT_COLOR;
     }
-
     private String logout() throws ResponseException {
         ensureLoggedInOrInGame(); // Check if logged in or in a game state
         try { server.logout(authToken); // Call HTTP logout
@@ -141,14 +135,13 @@ public class ChessClient implements ServerMessageObserver {
         state = State.LOGGEDOUT; // Set state
         return SET_TEXT_COLOR_GREEN + "Logged out." + RESET_TEXT_COLOR;
     }
-
     private String createGame(String... params) throws ResponseException {
         ensureLoggedInState(); // Must be logged in, not in game
-        if (params.length != 1) throw new ResponseException(400, "Usage: create <game name>");
-        GameData game = server.createGame(authToken, params[0]);
+        if (params.length != 1) {
+            throw new ResponseException(400, "Usage: create <game name>");
+        } GameData game = server.createGame(authToken, params[0]);
         return String.format(SET_TEXT_COLOR_GREEN + "Created game '%s'" + RESET_TEXT_COLOR, game.gameName());
     }
-
     private String listGames() throws ResponseException {
         ensureLoggedInState(); // Must be logged in, not in game
         List<GameInfo> games = server.listGames(authToken);
@@ -164,11 +157,11 @@ public class ChessClient implements ServerMessageObserver {
                     index++, info.gameName(), whitePlayer, blackPlayer));
         } return sb.toString();
     }
-
     private String joinGame(String... params) throws ResponseException {
         ensureLoggedInState(); // Must be logged in, not already in a game
-        if (params.length != 2) throw new ResponseException(400, "Usage: join <game_index> <WHITE|BLACK>");
-        int idx; String playerColorStr = params[1].toUpperCase();
+        if (params.length != 2) {
+            throw new ResponseException(400, "Usage: join <game_index> <WHITE|BLACK>");
+        }  int idx; String playerColorStr = params[1].toUpperCase();
         try { idx = Integer.parseInt(params[0].trim()) - 1;
         } catch (NumberFormatException e) {
             throw new ResponseException(400, "Invalid game index: Must be a number.");
@@ -192,18 +185,18 @@ public class ChessClient implements ServerMessageObserver {
             ConnectCommand connectCmd = new ConnectCommand(authToken, this.currentGameID);
             wsCommunicator.sendMessage(connectCmd);
             state = State.GAMESTATE;
-            return String.format(SET_TEXT_COLOR_GREEN + "Joining game %d as %s. Waiting for game data..." + RESET_TEXT_COLOR, this.currentGameID, playerColorStr);
+            return String.format(SET_TEXT_COLOR_GREEN + "Joining game %d as %s. " + RESET_TEXT_COLOR, this.currentGameID, playerColorStr);
         } catch (Exception e) {
             wsLeaveCleanup();
             state = State.LOGGEDIN; // Revert state
             throw new ResponseException(500, "Failed to connect to game server.");
         }
     }
-
     private String observeGame(String... params) throws ResponseException {
         ensureLoggedInState(); // Must be logged in, not already in a game
-        if (params.length != 1) throw new ResponseException(400, "Usage: observe <game_index>");
-        int idx;
+        if (params.length != 1) {
+            throw new ResponseException(400, "Usage: observe <game_index>");
+        } int idx;
         try { idx = Integer.parseInt(params[0].trim()) - 1;
         } catch (NumberFormatException e) {
             throw new ResponseException(400, "Invalid game index: Must be a number.");
@@ -226,7 +219,6 @@ public class ChessClient implements ServerMessageObserver {
             throw new ResponseException(500, "Failed to connect to game server.");
         }
     }
-
     private String redrawBoard() {
         ensureInGameState(); // Check if in a game state
         if (currentGame == null) {
@@ -234,7 +226,6 @@ public class ChessClient implements ServerMessageObserver {
         } drawBoardBasedOnColor();
         return ""; // Board drawing handles newlines/output
     }
-
     private String leaveGame() {
         ensureInGameState();
         try {
@@ -250,12 +241,13 @@ public class ChessClient implements ServerMessageObserver {
             return SET_TEXT_COLOR_YELLOW + "Error sending leave command, but you have left locally" + RESET_TEXT_COLOR;
         }
     }
-
     private String makeMove(String... params) {
         ensurePlayingState(); // Must be playing, not observing
-        if (currentGame == null) return SET_TEXT_COLOR_YELLOW + "Game not loaded yet." + RESET_TEXT_COLOR;
-        if (params.length < 2 || params.length > 3) return SET_TEXT_COLOR_RED + "Usage: move <startPos> <endPos> [promotionPiece]" + RESET_TEXT_COLOR;
-        String startPosStr = params[0];
+        if (currentGame == null) {
+            return SET_TEXT_COLOR_YELLOW + "Game not loaded yet." + RESET_TEXT_COLOR;
+        } if (params.length < 2 || params.length > 3) {
+            return SET_TEXT_COLOR_RED + "Usage: move <startPos> <endPos> [promotionPiece]" + RESET_TEXT_COLOR;
+        } String startPosStr = params[0];
         String endPosStr = params[1];
         ChessPiece.PieceType promotionType = null;
         if (params.length == 3) {
@@ -290,7 +282,6 @@ public class ChessClient implements ServerMessageObserver {
             return SET_TEXT_COLOR_RED + "Error sending move. " + RESET_TEXT_COLOR;
         }
     }
-
     private String resignGame(String... params) {
         ensurePlayingState(); // Must be playing to resign
         try {
@@ -301,16 +292,18 @@ public class ChessClient implements ServerMessageObserver {
             return SET_TEXT_COLOR_RED + "Error sending resignation. " + RESET_TEXT_COLOR;
         }
     }
-
     private String highlightMoves(String... params) {
         ensureInGameState(); // Can highlight when playing or observing
-        if (currentGame == null) return SET_TEXT_COLOR_YELLOW + "Game not loaded yet." + RESET_TEXT_COLOR;
-        if (params.length != 1) return SET_TEXT_COLOR_RED + "Usage: highlight <position> (e.g., highlight e2)" + RESET_TEXT_COLOR;
-        try {
+        if (currentGame == null) {
+            return SET_TEXT_COLOR_YELLOW + "Game not loaded yet." + RESET_TEXT_COLOR;
+        }  if (params.length != 1) {
+            return SET_TEXT_COLOR_RED + "Usage: highlight <position> (e.g., highlight e2)" + RESET_TEXT_COLOR;
+        } try {
             ChessPosition startPos = parsePosition(params[0]);
             ChessPiece piece = currentGame.getBoard().getPiece(startPos);
-            if (piece == null) return SET_TEXT_COLOR_YELLOW + "No piece at " + params[0] + "." + RESET_TEXT_COLOR;
-            Collection<ChessMove> validMoves = currentGame.validMoves(startPos);
+            if (piece == null) {
+                return SET_TEXT_COLOR_YELLOW + "No piece at " + params[0] + "." + RESET_TEXT_COLOR;
+            } Collection<ChessMove> validMoves = currentGame.validMoves(startPos);
             if (validMoves == null || validMoves.isEmpty()) {
                 drawBoardWithHighlights(currentGame.getBoard(), startPos, null);
                 return SET_TEXT_COLOR_YELLOW + "No legal moves for piece at " + params[0] + "." + RESET_TEXT_COLOR;
@@ -418,16 +411,16 @@ public class ChessClient implements ServerMessageObserver {
             sb.append(" ").append(r).append(" "); // Rank number again on the right
             sb.append(RESET_TEXT_COLOR);
             sb.append("\n"); // Newline for next rank
-        }   // Bottom border/file letters
-        sb.append(SET_TEXT_COLOR_WHITE);
+        } sb.append(SET_TEXT_COLOR_WHITE);
         sb.append(flip ? "    h  g  f  e  d  c  b  a \n" : "    a  b  c  d  e  f  g  h \n");
         sb.append(RESET_TEXT_COLOR);
         return sb.toString();
     }
 
     private static String getPieceString(ChessPiece piece) {
-        if (piece == null) return EMPTY; // EMPTY has padding
-        return switch (piece.getTeamColor()) {
+        if (piece == null) {
+            return EMPTY; // EMPTY has padding
+        } return switch (piece.getTeamColor()) {
             case WHITE -> switch (piece.getPieceType()) { // White pieces look black
                 case KING   -> BLACK_KING;
                 case QUEEN  -> BLACK_QUEEN;
