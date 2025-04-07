@@ -8,11 +8,9 @@ import websocket.WebSocketCommunicator;
 import websocket.commands.*;
 import websocket.messages.*;
 import serverfacade.ServerFacade;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+
+import java.util.*;
+
 import static ui.EscapeSequences.*;
 public class ChessClient implements ServerMessageObserver {
     private final ServerFacade server;
@@ -63,8 +61,21 @@ public class ChessClient implements ServerMessageObserver {
                 case GAMESTATE -> evalGameplay(cmd, params);
                 case OBSERVING -> evalObserving(cmd, params);
             };
-        } catch (ResponseException e) { // HTTP errors from ServerFacade
-            return SET_TEXT_COLOR_RED + "HTTP Error. " + RESET_TEXT_COLOR;
+        } catch (ResponseException e) {
+            String prefix = "Error"; // Default prefix
+            String serverDetails = e.getMessage() != null ? e.getMessage() : "No details provided by server.";
+
+            int statusCode = e.getStatusCode(); // Replace with your actual method if different
+
+            prefix = switch (statusCode) {
+                case 400 -> "Invalid Request";     // Bad syntax, missing fields
+                case 401 -> "Authentication Failed"; // Incorrect username/password, bad token
+                case 403 -> "Action Not Allowed";  // e.g., trying to join a full game
+                case 404 -> "Not Found";           // Resource doesn't exist (less common here)
+                case 500 -> "Server Error";         // Problem on the server side
+                default -> "HTTP Error (" + statusCode + ")"; // Handle unexpected codes
+            };
+            return SET_TEXT_COLOR_RED + prefix + ": " + serverDetails + RESET_TEXT_COLOR;
         } catch (Exception e) {
             return SET_TEXT_COLOR_RED + "Error" + RESET_TEXT_COLOR;
         }
@@ -285,7 +296,15 @@ public class ChessClient implements ServerMessageObserver {
     }
     private String resignGame(String... params) {
         ensurePlayingState(); // Must be playing to resign
-        try {
+        System.out.print(SET_TEXT_COLOR_YELLOW + "Are you sure you want to resign? (yes/no): " + RESET_TEXT_COLOR);
+        Scanner scanner = new Scanner(System.in);
+        String confirmation = "";
+        if (scanner.hasNextLine()) {
+            confirmation = scanner.nextLine().trim().toLowerCase();
+        } if (!"yes".equals(confirmation)) {
+            printPrompt();
+            return SET_TEXT_COLOR_GREEN + "Resignation cancelled." + RESET_TEXT_COLOR;
+        } try {
             ResignCommand resignCmd = new ResignCommand(authToken, currentGameID);
             wsCommunicator.sendMessage(resignCmd);
             return "You have resigned. Type 'leave' to exit game view.";
@@ -316,7 +335,6 @@ public class ChessClient implements ServerMessageObserver {
             return SET_TEXT_COLOR_RED + "Error calculating moves." + RESET_TEXT_COLOR;
         }
     }
-
     private void ensureLoggedInState() throws ResponseException {
         if (state == State.LOGGEDOUT) {
             throw new ResponseException(400, "You must be logged in.");
@@ -324,25 +342,21 @@ public class ChessClient implements ServerMessageObserver {
             throw new ResponseException(400, "You are already in a game. Type 'leave' first.");
         }
     }
-
     private void ensureInGameState() {
         if (state != State.GAMESTATE && state != State.OBSERVING) {
             throw new IllegalStateException("You must be in a game to perform this action.");
         }
     }
-
     private void ensurePlayingState() {
         if (state != State.GAMESTATE) {
             throw new IllegalStateException("You must be playing (not observing) to perform this action.");
         }
     }
-
     private void ensureLoggedInOrInGame() throws ResponseException {
         if (state == State.LOGGEDOUT) {
             throw new ResponseException(400, "You are not logged in.");
         }
     }
-
     private void wsLeaveCleanup() {
         if (wsCommunicator != null) {
             try {

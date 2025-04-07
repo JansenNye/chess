@@ -1,6 +1,7 @@
 package websocket;
 
 import chess.ChessMove;
+import chess.ChessPosition;
 import chess.InvalidMoveException;
 import com.google.gson.Gson;
 import dataaccess.*;
@@ -204,7 +205,9 @@ public class WebSocketHandler {
         connectionManager.broadcast(gameID, null, loadGameJson);
 
         // 7. Broadcast move notification to other clients
-        String notificationText = String.format("%s made move %s to %s.", username, move.getStartPosition(), move.getEndPosition());
+        String startPosStr = positionToString(move.getStartPosition());
+        String endPosStr = positionToString(move.getEndPosition());
+        String notificationText = String.format("%s made move %s to %s.", username, startPosStr, endPosStr);
         NotificationMessage notification = new NotificationMessage(notificationText);
         String notificationJson = gson.toJson(notification);
         connectionManager.broadcast(gameID, session, notificationJson);
@@ -320,5 +323,18 @@ public class WebSocketHandler {
             System.err.println("Failed to send error message '" + errorMessage + "': " + e.getMessage());
         }
     }
+    private String positionToString(ChessPosition pos) {
+        if (pos == null) {
+            return "??";
+        }
+        int row = pos.getRow();
+        int col = pos.getColumn();
 
+        if (row < 1 || row > 8 || col < 1 || col > 8) {
+            System.err.println("Warning: Invalid ChessPosition data encountered: row=" + row + ", col=" + col);
+            return "??";
+        }
+        char fileChar = (char) ('a' + col - 1);
+        return String.format("%c%d", fileChar, row);
+    }
 }
